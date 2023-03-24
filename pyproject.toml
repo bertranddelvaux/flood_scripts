@@ -1,0 +1,15 @@
+[tool.poetry]
+name = "flood-scripts"
+version = "0.1.0"
+description = "ARC's Flood Explorer python scripts"
+authors = ["bertranddelvaux <bertrand.delvaux@gmail.com>"]
+readme = "README.md"
+packages = [{include = "flood_scripts"}]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
