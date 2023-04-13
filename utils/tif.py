@@ -4,10 +4,6 @@ import rasterio
 import copy
 import numpy as np
 
-from rasterio.merge import merge
-
-from scipy.stats import mode
-
 from utils.files import get_file_stem_until_post
 
 def tifs2tif_depth(folder_path: str, tifs_list: list[str], postfix: str, post_stem: str ='ens', threshold: float = 0.8, n_bands: int = 211) -> str:
