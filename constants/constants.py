@@ -13,3 +13,6 @@ DICT_DATA_TREE = {DATA_FOLDER: {country: LIST_SUBFOLDERS for country in LIST_COU
 
 # temporary folder
 TMP_FOLDER = 'tmp'
+
+# days of forecast
+N_DAYS = 11
