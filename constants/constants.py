@@ -1,6 +1,6 @@
 # directory structure
 DATA_FOLDER = 'data'
-LIST_COUNTRIES = ['civ', 'gha', 'mdg', 'moz', 'mwi', 'tgo']
+LIST_COUNTRIES = ['moz', 'civ', 'gha', 'mdg', 'mwi', 'tgo']
 IMPACTS_FOLDER = 'impacts'
 RASTER_FOLDER = 'raster'
 EVENTS_FOLDER = 'events'

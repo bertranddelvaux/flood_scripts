@@ -2,6 +2,8 @@ import os
 
 from constants.constants import DICT_DATA_TREE
 
+# folders
+
 def createFolderIfNotExists(folder) -> None:
     """
     Create a folder if it does not exist
@@ -28,3 +30,14 @@ def createDataTreeStructure(dict_data_tree=DICT_DATA_TREE) -> None:
             for sub_folder in value:
                 createFolderIfNotExists(os.path.join(key, sub_folder))
     return
+
+# file
+
+def get_file_stem_until_post(file_path: str, postfix: str) -> str:
+    """
+    Get file stem until postfix starting with
+    :param file_path:
+    :param post:
+    :return:
+    """
+    return file_path.split(postfix)[0]
