@@ -1,3 +1,5 @@
+#TODO: next implementation: for the reference resolution, check the non-null pixels that overlap at at least threshold (0.8)
+
 import os.path
 
 import shutil
@@ -11,6 +13,41 @@ from utils.files import get_file_stem_until_post
 
 def convert_tif_2_crs():
     pass
+
+def crop_array_tif_meta(array: np.ndarray, meta: dict) -> tuple[dict, rasterio.Affine, int, int]:
+    """
+    Crop the array
+    :param array:
+    :param meta:
+    :return:
+    """
+
+    # Find the indices of the non-zero values
+    nonzero_indices = np.nonzero(array)
+
+    # Extract the minimum and maximum values for each dimension
+    min_x, max_x = np.min(nonzero_indices[1]), np.max(nonzero_indices[1])
+    min_y, max_y = np.min(nonzero_indices[0]), np.max(nonzero_indices[0])
+
+    # Get the transform
+    transform_c = meta['transform'].c + min_x * meta['transform'].a
+    transform_f = meta['transform'].f + min_y * meta['transform'].e
+    transform = rasterio.Affine(meta['transform'].a, meta['transform'].b, transform_c, meta['transform'].d,
+                                meta['transform'].e, transform_f)
+
+    # Get the width and height
+    width = max_x - min_x
+    height = max_y - min_y
+
+    # Update the metadata
+    meta.update({
+        'transform': transform,
+        'width': width,
+        'height': height,
+    })
+
+    return meta, transform, width, height
+
 
 def tifs_2_tif_depth(folder_path: str, tifs_list: list[str], postfix: str, post_stem: str = 'ens', threshold: float = 0.8, n_bands: int = 211, max_block_process_size: int = 1000) -> str:
     """
@@ -30,7 +67,6 @@ def tifs_2_tif_depth(folder_path: str, tifs_list: list[str], postfix: str, post_
 
     # Initialize reference metadata
     meta_ref = None
-    crs_ref = None
     array_ref = None
     transform_ref = None
 
@@ -41,55 +77,35 @@ def tifs_2_tif_depth(folder_path: str, tifs_list: list[str], postfix: str, post_
     for tif_file in tifs_list:
         with rasterio.open(os.path.join(folder_path, tif_file)) as src:
             meta = src.meta
+            crs = src.crs
 
             array = src.read(1)
 
             # check if it's empty
             if np.any(array != 0):
-
-                # Find the indices of the non-zero values
-                nonzero_indices = np.nonzero(array)
-
-                # Extract the minimum and maximum values for each dimension
-                min_x, max_x = np.min(nonzero_indices[1]), np.max(nonzero_indices[1])
-                min_y, max_y = np.min(nonzero_indices[0]), np.max(nonzero_indices[0])
-
-                # Get the transform
-                transform_c = meta['transform'].c + min_x * meta['transform'].a
-                transform_f = meta['transform'].f + min_y * meta['transform'].e
-                transform = rasterio.Affine(meta['transform'].a, meta['transform'].b, transform_c, meta['transform'].d, meta['transform'].e, transform_f)
-
-                # Get the width and height
-                width = max_x - min_x
-                height = max_y - min_y
-
-                # Update the metadata
-                meta.update({
-                    'transform': transform,
-                    'width': width,
-                    'height': height,
-                    'crs': crs_ref
-                })
+                meta, transform, width, height = crop_array_tif_meta(array, meta)
 
                 if meta_ref is None:
                     meta_ref = copy.deepcopy(meta)
-                    crs_ref = copy.deepcopy(src.crs)
                     transform_ref = copy.deepcopy(transform)
+                    crs_ref = copy.deepcopy(src.crs)
                     array_ref = np.empty((height, width), dtype=meta_ref['dtype'])
+                    width_ref = width
+                    height_ref = height
                 else:
                     # take the maximum extent
                     transform_ref_c = min(transform_ref.c, transform.c)
                     transform_ref_f = max(transform_ref.f, transform.f)
                     transform_ref = rasterio.Affine(transform_ref.a, transform_ref.b, transform_ref_c, transform_ref.d, transform_ref.e, transform_ref_f)
-                    width_ref = max(meta_ref['width'], meta['width'])
-                    height_ref = max(meta_ref['height'], meta['height'])
+                    width_ref = max(width_ref, width)
+                    height_ref = max(height_ref, height)
                     array_ref = np.empty((height_ref, width_ref), dtype=meta_ref['dtype'])
                     # update the reference metadata
                     meta_ref.update({
                         'transform': transform_ref,
                         'width': width_ref,
                         'height': height_ref,
-                        'crs': crs_ref
+                        'crs': crs_ref,
                     })
 
     print(f'\t\t\tReference resolution: , {meta_ref["width"]}x{meta_ref["height"]}')
@@ -112,7 +128,7 @@ def tifs_2_tif_depth(folder_path: str, tifs_list: list[str], postfix: str, post_
                     crs_ref = copy.deepcopy(src.crs)
 
                 # Check if the resolution, coordinates and affine transformation coefficients are different from the reference
-                elif src.meta['transform'] != meta_ref['transform'] or src.meta['crs'] != meta_ref['crs'] or src.meta['height'] != meta_ref['height'] or src.meta['width'] != meta_ref['width']:
+                elif src.meta['transform'] != meta_ref['transform'] or src.meta['height'] != meta_ref['height'] or src.meta['width'] != meta_ref['width']:
 
                     if msg_different_resolutions is None:
                         msg_different_resolutions = f'\t\t\t\t\033[31mWarning: The TIF files that you are trying to combine come from different resolutions and/or regions. ✘' # \n{meta_ref}\n{meta}
@@ -190,6 +206,9 @@ def tifs_2_tif_depth(folder_path: str, tifs_list: list[str], postfix: str, post_
 
             # Write the array sub_section to ensemble_agreement
             ensemble_agreement[i*max_block_process_size:(i+1)*max_block_process_size, j*max_block_process_size:(j+1)*max_block_process_size] = ensemble_agreement_partition
+
+    # Crop the array to the reference resolution
+    meta_ref, transform, width, height = crop_array_tif_meta(ensemble_agreement, meta_ref)
 
     # update meta to compress and tile
     meta_ref.update({

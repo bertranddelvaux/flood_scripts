@@ -47,10 +47,10 @@ def process_files_include_exclude(include_str:str, exclude_str:str, sftp:pysftp.
         return False
 
     # process depth map
-    try:
-        output_file = tifs_2_tif_depth(folder_path=tmp_path, tifs_list=list_files, postfix=postfix, n_bands=n_bands, threshold=threshold)
-    except:
-        return False
+    #try:
+    output_file = tifs_2_tif_depth(folder_path=tmp_path, tifs_list=list_files, postfix=postfix, n_bands=n_bands, threshold=threshold)
+    #except:
+        #return False
 
     # remove files from temp folder
     for file in list_files:
@@ -86,9 +86,6 @@ def pipeline(n_days: int = N_DAYS):
                     createFolderIfNotExists(tmp_path)
 
                     for i_day in range(0, n_days):
-                        # TODO: REMOVE
-                        i_day = 1
-                        # TODO: REMOVE
                         year_n, month_n, day_n = increment_day(year, month, day, i_day)
 
                         # print day
