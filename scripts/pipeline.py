@@ -86,6 +86,9 @@ def pipeline(n_days: int = N_DAYS):
                     createFolderIfNotExists(tmp_path)
 
                     for i_day in range(0, n_days):
+                        # TODO: REMOVE
+                        i_day = 1
+                        # TODO: REMOVE
                         year_n, month_n, day_n = increment_day(year, month, day, i_day)
 
                         # print day
