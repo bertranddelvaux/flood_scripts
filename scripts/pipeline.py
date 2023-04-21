@@ -6,6 +6,7 @@
 #####################################################
 
 import os
+import shutil
 import time
 import datetime as dt
 import argparse
@@ -20,7 +21,7 @@ from utils.files import createFolderIfNotExists, createDataTreeStructure, DICT_D
 
 from utils.date import year, month, day, increment_day
 
-from utils.json import createJSONifNotExists
+from utils.json import createJSONifNotExists, jsonFileToDict, dictToJSONFile
 
 # TODO: REMOVE set date!!
 year, month, day = '2023', '03', '31'
@@ -55,7 +56,7 @@ def process_files_include_exclude(include_str:str, exclude_str:str, sftp:pysftp.
 
     # process depth map
     #try:
-    output_file, empty = tifs_2_tif_depth(folder_path=tmp_path, tifs_list=list_files, postfix=postfix, n_bands=n_bands, threshold=threshold)
+    raster_depth_file, empty = tifs_2_tif_depth(folder_path=tmp_path, tifs_list=list_files, postfix=postfix, n_bands=n_bands, threshold=threshold)
     success = True
     #except:
         #return False
@@ -64,7 +65,7 @@ def process_files_include_exclude(include_str:str, exclude_str:str, sftp:pysftp.
     for file in list_files:
         os.remove(os.path.join(tmp_path, file))
 
-    print(f'\t\t\tCreated depth map: \033[32m{output_file}\033[0m ', end='')
+    print(f'\t\t\tCreated depth map: \033[32m{raster_depth_file}\033[0m ', end='')
 
     return success, empty
 
@@ -118,130 +119,179 @@ def pipeline(n_days: int = N_DAYS):
                         #TODO: REMOVE
                         import random
                         empty = random.choice([True, False])
+                        #empty = False
                         #TODO: REMOVE
 
                         # for day 0, check if empty (no depth map)
                         if i_day == 0:
 
-                            # if not empty, check if event exists
+                            # json file for country
+                            json_path_country = os.path.join(DATA_FOLDER, country)
+                            json_file_country = f'{country}.json'
+
+                            # json file for year
+                            json_path_year = os.path.join(DATA_FOLDER, country, EVENTS_FOLDER, year_n)
+                            json_file_year = f'{country}_{year_n}.json'
+
+                            # json file for event
+                            json_path_event = os.path.join(DATA_FOLDER, country, EVENTS_FOLDER, year_n, f'{month:02}',
+                                                           f'{day:02}')
+                            json_file_event = f'{year_n}_{month_n:02}_{day_n:02}.json'
+
+                            # intialize json files
+
+                            ## Create JSON files if they don't exist
+                            dict_default_values = {
+                                'created': str(dt.datetime.now()),
+                                'last_edited': str(dt.datetime.now()),
+                                'ongoing': True,
+                                'ongoing_event_year': year_n,
+                                'ongoing_event_month': month_n,
+                                'ongoing_event_day': day_n,
+                                'stats': {}
+                            }
+
+                            # create json at country level
+                            createJSONifNotExists(
+                                json_path=json_path_country,
+                                json_file=json_file_country,
+                                json_dict={**dict_default_values, **{
+                                    'total_events_country': 0,
+                                    'total_days_country': 0,
+                                    'peak_year': {},
+                                    'year_by_year': []
+                                }}
+                            )
+
+                            # create json at year level
+                            createJSONifNotExists(
+                                json_path=json_path_year,
+                                json_file=json_file_year,
+                                json_dict={**dict_default_values, **{
+                                    'total_events_year': 0,
+                                    'total_days_year': 0,
+                                    'peak_event': {},
+                                    'event_by_event': []
+                                }}
+                            )
+
+                            # create json at event level
+                            createJSONifNotExists(
+                                json_path=json_path_event,
+                                json_file=json_file_event,
+                                json_dict={**dict_default_values, **{
+                                    'total_days': 0,
+                                    'peak_day': {},
+                                    'day_by_day': []
+                                }}
+                            )
+
+                            # if not empty, check if event already exists
                             if not empty:
 
-                                # check if event exists
-                                dict_default_values = {
-                                    'created': str(dt.datetime.now()),
-                                    'last_edited': str(dt.datetime.now()),
-                                    'ongoing': True,
-                                    'ongoing_event_year': year_n,
-                                    'ongoing_event_month': month_n,
-                                    'ongoing_event_day': day_n,
-                                    'stats': {}
-                                }
+                                # load the jsons at country level, year level and event level
+                                dict_country = jsonFileToDict(json_path_country, json_file_country)
 
-                                # create json at country level
-                                createJSONifNotExists(
-                                    json_path=os.path.join(DATA_FOLDER, country),
-                                    json_file=f'{country}.json',
-                                    json_dict={**dict_default_values, **{
-                                        'total_events_country': 0,
-                                        'total_days_country': 0,
-                                        'peak_year': {},
-                                        'year_by_year': []
-                                    }}
-                                )
+                                # check if ongoing event exists
+                                if dict_country['ongoing']:
 
-                                # create json at year level
-                                createJSONifNotExists(
-                                    json_path=os.path.join(DATA_FOLDER, country, EVENTS_FOLDER, year),
-                                    json_file=f'{country}_{year_n}.json',
-                                    json_dict={**dict_default_values, **{
-                                        'total_events_year': 0,
-                                        'total_days_year': 0,
-                                        'peak_event': {},
-                                        'event_by_event': []
-                                    }}
-                                )
+                                    # get the json year of the ongoing event
+                                    year_ongoing = dict_country['ongoing_event_year']
+                                    month_ongoing = dict_country['ongoing_event_month']
+                                    day_ongoing = dict_country['ongoing_event_day']
 
-                                # create json at event level
-                                createJSONifNotExists(
-                                    json_path=os.path.join(DATA_FOLDER, country, EVENTS_FOLDER, year, f'{month:02}', f'{day:02}'),
-                                    json_file=f'{year}_{month:02}_{day:02}.json',
-                                    json_dict={**dict_default_values, **{
-                                        'total_days': 0,
-                                        'peak_day': {},
-                                        'day_by_day': []
-                                    }}
-                                )
+                                    # get the json year of the ongoing event
+                                    json_path_year = os.path.join(DATA_FOLDER, country, EVENTS_FOLDER, year_ongoing)
+                                    json_file_year = f'{country}_{year_ongoing}.json'
+                                    dict_year = jsonFileToDict(json_path_year, json_file_year)
+
+                                    # get the json event of the ongoing event
+                                    json_path_event = os.path.join(DATA_FOLDER, country, EVENTS_FOLDER, year_ongoing, month_ongoing, day_ongoing)
+                                    json_file_event = f'{year_ongoing}_{month_ongoing}_{day_ongoing}.json'
+                                    dict_event = jsonFileToDict(json_path_event, json_file_event)
+
+                                    ## Copy files
+
+                                    # copy the depth file
+                                    depth_file = [os.path.join(DATA_FOLDER, country, RASTER_FOLDER, TMP_FOLDER, f) for f in os.listdir(os.path.join(DATA_FOLDER, country, RASTER_FOLDER, TMP_FOLDER)) if f'fe{year_ongoing}{month_ongoing}{day_ongoing}' in f and 'depth.tif' in f][0]
+                                    shutil.copy(depth_file, os.path.join(json_path_event, os.path.basename(depth_file)))
+
+                                    # copy the impact file
+                                    impact_file = [os.path.join(DATA_FOLDER, country, IMPACTS_FOLDER, f) for f in os.listdir(os.path.join(DATA_FOLDER, country, IMPACTS_FOLDER)) if f'rd{year_ongoing}{month_ongoing}{day_ongoing}' in f and '.csv' in f][0]
+                                    shutil.copy(impact_file, os.path.join(json_path_event, os.path.basename(impact_file)))
 
 
-                                # copy files day 0 (depth + impact)
 
-                                # update jsons
+                                    # update the json event of the ongoing event
+                                    dict_event['total_days'] += 1
+                                    dict_event['day_by_day'].append({
+                                        'day': day_n, #TODO: add stats here
+                                    })
+                                    #TODO: add logic for peak day
+                                    dict_event['last_edited'] = str(dt.datetime.now())
+
+                                    # update the json year of the ongoing event
+                                    dict_year['event_by_event'].append({
+                                        'event': f'{month_n:02}_{day_n:02}', #TODO: add stats here
+                                    })
+                                    dict_year['last_edited'] = str(dt.datetime.now())
+
+                                    # update the json country of the ongoing event
+                                    dict_country['last_edited'] = str(dt.datetime.now())
 
                             # if empty, check if ongoing event exists
+                            else:
 
-                                # if yes, close it
+                                # check if ongoing event exists
+                                # load the jsons at country level, year level and event level
+                                dict_country = jsonFileToDict(json_path_country, json_file_country)
+                                if dict_country['ongoing']:
+
+                                    # get the json year of the ongoing event
+                                    year_ongoing = dict_country['ongoing_event_year']
+                                    month_ongoing = dict_country['ongoing_event_month']
+                                    day_ongoing = dict_country['ongoing_event_day']
+
+                                    # get the json year of the ongoing event
+                                    json_path_year = os.path.join(DATA_FOLDER, country, EVENTS_FOLDER, year_ongoing)
+                                    json_file_year = f'{country}_{year_ongoing}.json'
+                                    dict_year = jsonFileToDict(json_path_year, json_file_year)
+
+                                    # get the json event of the ongoing event
+                                    json_path_event = os.path.join(DATA_FOLDER, country, EVENTS_FOLDER, year_ongoing, month_ongoing, day_ongoing)
+                                    json_file_event = f'{year_ongoing}_{month_ongoing}_{day_ongoing}.json'
+                                    dict_event = jsonFileToDict(json_path_event, json_file_event)
+
+                                    # if ongoing event exists, set it to False
+                                    dict_country['ongoing'] = False
+                                    dict_country['ongoing_event_year'] = None
+                                    dict_country['ongoing_event_month'] = None
+                                    dict_country['ongoing_event_day'] = None
+                                    dict_country['total_events_country'] += 1
+                                    dict_country['total_days_country'] += dict_event['total_days']
+                                    dict_country['last_edited'] = str(dt.datetime.now())
+
+                                    dict_year['ongoing'] = False
+                                    dict_year['ongoing_event_year'] = None
+                                    dict_year['ongoing_event_month'] = None
+                                    dict_year['ongoing_event_day'] = None
+                                    dict_year['total_events_year'] += 1
+                                    dict_year['total_days_year'] += dict_event['total_days']
+                                    dict_year['last_edited'] = str(dt.datetime.now())
+
+                                    dict_event['ongoing'] = False
+                                    dict_event['last_edited'] = str(dt.datetime.now())
+
+
+                            # update the jsons
+                            dictToJSONFile(json_path_country, json_file_country, dict_country)
+                            dictToJSONFile(json_path_year, json_file_year, dict_year)
+                            dictToJSONFile(json_path_event, json_file_event, dict_event)
+
 
 
 
                     exit()
-
-                    ######TODO: START HERE
-
-
-
-
-                    # create depth map of day 0
-
-                    ## get list of files for day 0
-                    list_files_day_0 = [tif.filename for tif in sftp.listdir_attr(path_sftp) if
-                     f'fe{year}{month}{day}' in tif.filename and 'Agreement' not in tif.filename]
-
-                    ## download files for day 0
-                    # for file in list_files_day_0:
-                    #     sftp.get(os.path.join(path_sftp, file), os.path.join(tmp_path, file))
-
-                    ## process depth map of day 0
-                    output_file = tifs_2_tif_depth(folder_path=tmp_path, tifs_list=list_files_day_0, postfix='_depth.tif', n_bands=211) #TODO: remove [4] when all files are available and n_bands
-
-                    if output_file:
-                        print(f'\t\tCreated depth map for day 0: \033[32m{output_file}\033[0m')
-
-                    print()
-
-
-
-                    sftp.get_d(path_sftp, tmp_path, preserve_mtime=False)
-
-                    # create depth map of day 0
-
-                    # create depth map (probability >= 08) of day 1-10
-
-                    # check if event needs to be created
-
-                    # does the event already exist?
-
-                    # if not, create it
-
-                    # if yes, update it (json)
-
-                    # add the depth map of the event
-
-                    # append the csv of the event
-
-                    # remove temporary data from buffer folder
-
-
-                print(f'\t\tDownloaded \033[32m{path_sftp}\033[0m from the sftp server')
-
-                #except:
-                    #print(f'\t\tCould not get \033[31m{path_sftp}\033[0m from JBA\'s server')
-
-
-
-
-        # loop through subfolders
-
-            # get latest data from JBA's server
 
 
 
