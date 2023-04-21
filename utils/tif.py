@@ -49,7 +49,7 @@ def crop_array_tif_meta(array: np.ndarray, meta: dict) -> tuple[dict, rasterio.A
     return meta, transform, width, height
 
 
-def tifs_2_tif_depth(folder_path: str, tifs_list: list[str], postfix: str, post_stem: str = 'ens', threshold: float = 0.8, n_bands: int = 211, max_block_process_size: int = 1000) -> str:
+def tifs_2_tif_depth(folder_path: str, tifs_list: list[str], postfix: str, post_stem: str = 'ens', threshold: float = 0.8, n_bands: int = 211, max_block_process_size: int = 1000) -> tuple[str, bool]:
     """
     Create a depth map from a list of tifs
     :param folder_path:
@@ -69,6 +69,9 @@ def tifs_2_tif_depth(folder_path: str, tifs_list: list[str], postfix: str, post_
     meta_ref = None
     array_ref = None
     transform_ref = None
+
+    # Initialize boolean empty
+    empty = True
 
     # Initialize message for different resolutions
     msg_different_resolutions = None
@@ -154,7 +157,7 @@ def tifs_2_tif_depth(folder_path: str, tifs_list: list[str], postfix: str, post_
                               src_crs=src.crs,
                               dst_transform=transform,
                               dst_crs=crs_ref,
-                              resampling=Resampling.nearest)
+                              resampling=Resampling.bilinear)
 
                     # Add the reprojected array to the list
                     arrays.append(dest)
@@ -185,6 +188,9 @@ def tifs_2_tif_depth(folder_path: str, tifs_list: list[str], postfix: str, post_
     # initialize the ensemble agreement array
     ensemble_agreement = np.zeros_like(stacked[0])
 
+    # initialize max count
+    max_count = 0
+
     for i in range(int(np.ceil(stacked.shape[1] / max_block_process_size))):
         for j in range(int(np.ceil(stacked.shape[2] / max_block_process_size))):
             print(f'\t\t\t\tProcessing block ({i + 1}/{int(np.ceil(stacked.shape[1] / max_block_process_size))} ; {j+1}/{int(np.ceil(stacked.shape[2] / max_block_process_size))}) ({(i + 1) * max_block_process_size}/{stacked.shape[1]}) ; ({(j+1)*max_block_process_size}/{stacked.shape[2]})')
@@ -198,6 +204,9 @@ def tifs_2_tif_depth(folder_path: str, tifs_list: list[str], postfix: str, post_
             most_common_depth = np.argmax(counts, axis=0)
             most_common_depth_count = np.max(counts, axis=0)
 
+            # Update max count
+            max_count = np.max([max_count, np.max(most_common_depth_count)])
+
             # Calculate the probability of the most common depth value for each pixel
             probability = most_common_depth_count / stacked_partition.shape[0]
 
@@ -207,8 +216,36 @@ def tifs_2_tif_depth(folder_path: str, tifs_list: list[str], postfix: str, post_
             # Write the array sub_section to ensemble_agreement
             ensemble_agreement[i*max_block_process_size:(i+1)*max_block_process_size, j*max_block_process_size:(j+1)*max_block_process_size] = ensemble_agreement_partition
 
-    # Crop the array to the reference resolution
-    meta_ref, transform, width, height = crop_array_tif_meta(ensemble_agreement, meta_ref)
+    # Print max agreement
+    print(f'\t\t\t\tMax agreement: {max_count}/{stacked.shape[0]} ({max_count/stacked.shape[0]*100:.2f}%), ', end='')
+    if max_count / stacked.shape[0] * 100 < threshold * 100:
+        print(f"\033[31m{'below the threshold'}\033[0m")  # 31 for red color
+    else:
+        print(f"\033[32m{'above the threshold'}\033[0m")  # 32 for green color
+
+
+    # Check if the ensemble agreement array is empty
+    if np.any(ensemble_agreement != 0):
+
+        empty = False
+
+        # Crop the array to the reference resolution
+        #TODO: correct the following line to crop appropriately
+        meta_ref, transform, width, height = crop_array_tif_meta(ensemble_agreement, meta_ref)
+
+        print(f'\t\t\t\tCropping the array to the reference resolution: {width}x{height}')
+
+        # Reproject the array to the reference system
+        dest = np.empty((height, width), dtype=meta_ref['dtype'])
+        reproject(source=ensemble_agreement,
+                  destination=dest,
+                  src_transform=transform,
+                  src_crs=crs_ref,
+                  dst_transform=transform,
+                  dst_crs=crs_ref,
+                  resampling=Resampling.bilinear)
+
+        ensemble_agreement = dest
 
     # update meta to compress and tile
     meta_ref.update({
@@ -221,4 +258,5 @@ def tifs_2_tif_depth(folder_path: str, tifs_list: list[str], postfix: str, post_
         print(f'\t\t\t\tWrite the resulting raster to a new geotiff file: {output_file}')
         dst.write(ensemble_agreement, 1)
 
-    return output_file
+    # Return the output file name, and a boolean indicating if the array is empty
+    return output_file, empty
