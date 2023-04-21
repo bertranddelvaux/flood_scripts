@@ -11,8 +11,18 @@ from rasterio.warp import calculate_default_transform, reproject, Resampling
 
 from utils.files import get_file_stem_until_post
 
-def convert_tif_2_crs():
-    pass
+def tif_2_array(tif_file: str) -> tuple[np.ndarray, dict]:
+    """
+    Get a tif file and return an array and the metadata
+    :param tif_file:
+    :return:
+    """
+
+    with rasterio.open(tif_file) as src:
+        array = src.read()
+        meta = src.meta
+
+    return array, meta
 
 def crop_array_tif_meta(array: np.ndarray, meta: dict) -> tuple[dict, rasterio.Affine, int, int]:
     """

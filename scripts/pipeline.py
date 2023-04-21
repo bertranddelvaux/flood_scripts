@@ -23,12 +23,13 @@ from utils.date import year, month, day, increment_day
 
 from utils.json import createJSONifNotExists, jsonFileToDict, dictToJSONFile
 
+from utils.tif import tifs_2_tif_depth, tif_2_array
+
+from utils.stats import array_2_stats
+
 # TODO: REMOVE set date!!
 year, month, day = '2023', '03', '31'
 # TODO: REMOVE
-
-from utils.tif import tifs_2_tif_depth
-
 
 def pipeline_tifs():
     pass
@@ -118,8 +119,8 @@ def pipeline(n_days: int = N_DAYS):
 
                         #TODO: REMOVE
                         import random
-                        empty = random.choice([True, False])
-                        #empty = False
+                        #empty = random.choice([True, False])
+                        empty = False
                         #TODO: REMOVE
 
                         # for day 0, check if empty (no depth map)
@@ -188,6 +189,7 @@ def pipeline(n_days: int = N_DAYS):
 
                             # if not empty, check if event already exists
                             if not empty:
+                                print(f'\t\t\tChecking if event already exists... ', end='')
 
                                 # load the jsons at country level, year level and event level
                                 dict_country = jsonFileToDict(json_path_country, json_file_country)
@@ -220,24 +222,30 @@ def pipeline(n_days: int = N_DAYS):
                                     impact_file = [os.path.join(DATA_FOLDER, country, IMPACTS_FOLDER, f) for f in os.listdir(os.path.join(DATA_FOLDER, country, IMPACTS_FOLDER)) if f'rd{year_ongoing}{month_ongoing}{day_ongoing}' in f and '.csv' in f][0]
                                     shutil.copy(impact_file, os.path.join(json_path_event, os.path.basename(impact_file)))
 
-
-
-                                    # update the json event of the ongoing event
-                                    dict_event['total_days'] += 1
-                                    dict_event['day_by_day'].append({
-                                        'day': day_n, #TODO: add stats here
-                                    })
-                                    #TODO: add logic for peak day
-                                    dict_event['last_edited'] = str(dt.datetime.utcnow())
-
                                     # update the json year of the ongoing event
                                     dict_year['event_by_event'].append({
                                         'event': f'{month_n:02}_{day_n:02}', #TODO: add stats here
                                     })
                                     dict_year['last_edited'] = str(dt.datetime.utcnow())
 
-                                    # update the json country of the ongoing event
-                                    dict_country['last_edited'] = str(dt.datetime.utcnow())
+                                    # update the json event of the ongoing event
+                                    # open the raster file
+                                    array, meta = tif_2_array(os.path.join(json_path_event, os.path.basename(depth_file)))
+                                    # get the stats
+                                    stats = array_2_stats(
+                                        array=array,
+                                        pixel_size_x_m=meta['transform'].a,
+                                        pixel_size_y_m=meta['transform'].e
+                                    )
+
+                                    dict_event['total_days'] += 1
+                                    dict_event['day_by_day'].append({
+                                        'day': i_day,
+                                        'stats': stats
+                                    })
+                                    dict_event['stats'] = {**dict_event['stats'], **stats} #TODO: add comparison with previous day and keep the 'best' one
+                                    #TODO: add logic for peak day
+                                    dict_event['last_edited'] = str(dt.datetime.utcnow())
 
                             # if empty, check if ongoing event exists
                             else:

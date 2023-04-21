@@ -16,3 +16,6 @@ TMP_FOLDER = 'tmp'
 
 # days of forecast
 N_DAYS = 11
+
+# number of bands
+N_BANDS = 211
