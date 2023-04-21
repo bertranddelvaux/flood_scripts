@@ -142,8 +142,8 @@ def pipeline(n_days: int = N_DAYS):
 
                             ## Create JSON files if they don't exist
                             dict_default_values = {
-                                'created': str(dt.datetime.now()),
-                                'last_edited': str(dt.datetime.now()),
+                                'created': str(dt.datetime.utcnow()),
+                                'last_edited': str(dt.datetime.utcnow()),
                                 'ongoing': True,
                                 'ongoing_event_year': year_n,
                                 'ongoing_event_month': month_n,
@@ -228,16 +228,16 @@ def pipeline(n_days: int = N_DAYS):
                                         'day': day_n, #TODO: add stats here
                                     })
                                     #TODO: add logic for peak day
-                                    dict_event['last_edited'] = str(dt.datetime.now())
+                                    dict_event['last_edited'] = str(dt.datetime.utcnow())
 
                                     # update the json year of the ongoing event
                                     dict_year['event_by_event'].append({
                                         'event': f'{month_n:02}_{day_n:02}', #TODO: add stats here
                                     })
-                                    dict_year['last_edited'] = str(dt.datetime.now())
+                                    dict_year['last_edited'] = str(dt.datetime.utcnow())
 
                                     # update the json country of the ongoing event
-                                    dict_country['last_edited'] = str(dt.datetime.now())
+                                    dict_country['last_edited'] = str(dt.datetime.utcnow())
 
                             # if empty, check if ongoing event exists
                             else:
