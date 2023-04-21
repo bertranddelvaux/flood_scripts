@@ -7,6 +7,7 @@
 
 import os
 import time
+import datetime as dt
 import argparse
 import pysftp
 
@@ -19,6 +20,8 @@ from utils.files import createFolderIfNotExists, createDataTreeStructure, DICT_D
 
 from utils.date import year, month, day, increment_day
 
+from utils.json import createJSONifNotExists
+
 # TODO: REMOVE set date!!
 year, month, day = '2023', '03', '31'
 # TODO: REMOVE
@@ -30,7 +33,11 @@ def pipeline_tifs():
     pass
 
 def process_files_include_exclude(include_str:str, exclude_str:str, sftp:pysftp.Connection, path_sftp:str, tmp_path:str, postfix='_depth.tif',
-                                 n_bands=211, threshold=0.8) -> bool | None:
+                                 n_bands=211, threshold=0.8) -> tuple[bool, bool]:
+
+    # initialize success flag
+    success = False
+    empty = False
 
     # get list of files
     list_files = [tif.filename for tif in sftp.listdir_attr(path_sftp) if
@@ -44,11 +51,12 @@ def process_files_include_exclude(include_str:str, exclude_str:str, sftp:pysftp.
         print('\033[32m' + '✔' + '\033[0m')
     except:
         print('\033[31m' + '✘' + '\033[0m')
-        return False
+        return success, empty
 
     # process depth map
     #try:
-    output_file = tifs_2_tif_depth(folder_path=tmp_path, tifs_list=list_files, postfix=postfix, n_bands=n_bands, threshold=threshold)
+    output_file, empty = tifs_2_tif_depth(folder_path=tmp_path, tifs_list=list_files, postfix=postfix, n_bands=n_bands, threshold=threshold)
+    success = True
     #except:
         #return False
 
@@ -58,7 +66,7 @@ def process_files_include_exclude(include_str:str, exclude_str:str, sftp:pysftp.
 
     print(f'\t\t\tCreated depth map: \033[32m{output_file}\033[0m ', end='')
 
-    return True
+    return success, empty
 
 
 def pipeline(n_days: int = N_DAYS):
@@ -92,20 +100,88 @@ def pipeline(n_days: int = N_DAYS):
                         print(f'\t\tProcessing \033[1mday {i_day}\033[0m : ({year_n}-{month_n}-{day_n}) ... ')
 
                         # create depth map
-                        success = process_files_include_exclude(
-                            include_str=f'fe{year_n}{month_n}{day_n}',
-                            exclude_str='Agreement',
-                            sftp=sftp,
-                            path_sftp=path_sftp,
-                            tmp_path=tmp_path,
-                            postfix='_depth.tif',
-                            n_bands=211,
-                            threshold=0.8
-                        )
-                        if success:
-                            print(f'(\033[1mday {i_day}\033[0m)')
-                        else:
-                            print(f'\t\t\033[31mCould not create depth map for day \033[1m{i_day}\033[0m')
+                        # success, empty = process_files_include_exclude(
+                        #     include_str=f'fe{year_n}{month_n}{day_n}',
+                        #     exclude_str='Agreement',
+                        #     sftp=sftp,
+                        #     path_sftp=path_sftp,
+                        #     tmp_path=tmp_path,
+                        #     postfix='_depth.tif',
+                        #     n_bands=211,
+                        #     threshold=0.8
+                        # )
+                        # if success:
+                        #     print(f'(\033[1mday {i_day}\033[0m)')
+                        # else:
+                        #     print(f'\t\t\033[31mCould not create depth map for day \033[1m{i_day}\033[0m')
+
+                        #TODO: REMOVE
+                        import random
+                        empty = random.choice([True, False])
+                        #TODO: REMOVE
+
+                        # for day 0, check if empty (no depth map)
+                        if i_day == 0:
+
+                            # if not empty, check if event exists
+                            if not empty:
+
+                                # check if event exists
+                                dict_default_values = {
+                                    'created': str(dt.datetime.now()),
+                                    'last_edited': str(dt.datetime.now()),
+                                    'ongoing': True,
+                                    'ongoing_event_year': year_n,
+                                    'ongoing_event_month': month_n,
+                                    'ongoing_event_day': day_n,
+                                    'stats': {}
+                                }
+
+                                # create json at country level
+                                createJSONifNotExists(
+                                    json_path=os.path.join(DATA_FOLDER, country),
+                                    json_file=f'{country}.json',
+                                    json_dict={**dict_default_values, **{
+                                        'total_events_country': 0,
+                                        'total_days_country': 0,
+                                        'peak_year': {},
+                                        'year_by_year': []
+                                    }}
+                                )
+
+                                # create json at year level
+                                createJSONifNotExists(
+                                    json_path=os.path.join(DATA_FOLDER, country, EVENTS_FOLDER, year),
+                                    json_file=f'{country}_{year_n}.json',
+                                    json_dict={**dict_default_values, **{
+                                        'total_events_year': 0,
+                                        'total_days_year': 0,
+                                        'peak_event': {},
+                                        'event_by_event': []
+                                    }}
+                                )
+
+                                # create json at event level
+                                createJSONifNotExists(
+                                    json_path=os.path.join(DATA_FOLDER, country, EVENTS_FOLDER, year, f'{month:02}', f'{day:02}'),
+                                    json_file=f'{year}_{month:02}_{day:02}.json',
+                                    json_dict={**dict_default_values, **{
+                                        'total_days': 0,
+                                        'peak_day': {},
+                                        'day_by_day': []
+                                    }}
+                                )
+
+
+                                # copy files day 0 (depth + impact)
+
+                                # update jsons
+
+                            # if empty, check if ongoing event exists
+
+                                # if yes, close it
+
+
 
                     exit()
 
