@@ -19,3 +19,14 @@ N_DAYS = 11
 
 # number of bands
 N_BANDS = 211
+
+# default dict values
+DICT_DEFAULT_VALUES = {
+    'created': None,
+    'last_edited': None,
+    'ongoing': False,
+    'ongoing_event_year': None,
+    'ongoing_event_month': None,
+    'ongoing_event_day': None,
+    'stats': {}
+}

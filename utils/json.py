@@ -1,7 +1,7 @@
 import os
 import json
 
-def createJSONifNotExists(json_path: str, json_file: str, json_dict: dict) -> None:
+def createJSONifNotExists(json_path: str, json_file: str, json_dict: dict) -> dict:
     """
     Create a JSON file if it does not exist
     :param json_path:
@@ -16,6 +16,8 @@ def createJSONifNotExists(json_path: str, json_file: str, json_dict: dict) -> No
         with open(path, 'w') as fp:
             json.dump(json_dict, fp)
             print(f'\t\t\t\t\033[34mCreating file {json_file}...\033[0m')
+
+    return json_dict
 
 def jsonFileToDict(json_path: str, json_file: str) -> dict:
     """
