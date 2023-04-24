@@ -139,7 +139,7 @@ def pipeline(n_days: int = N_DAYS):
                         #     print(f'\t\t\033[31mCould not create depth map for day \033[1m{i_day}\033[0m')
                         # TODO: RESTORE ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-                        #TODO: REMOVE
+                        #TODO: REMOVE ------------------------------------------------------------------------------------------
                         import random
                         #empty = random.choice([True, False])
                         if random.random() > 0.75:
@@ -148,7 +148,7 @@ def pipeline(n_days: int = N_DAYS):
                             empty = False
                         i_day = 0
                         #empty = False
-                        #TODO: REMOVE
+                        #TODO: REMOVE ------------------------------------------------------------------------------------------
 
                         # for day 0, check if empty (no depth map)
                         if i_day == 0:
