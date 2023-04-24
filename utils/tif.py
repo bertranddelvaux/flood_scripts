@@ -121,6 +121,11 @@ def tifs_2_tif_depth(folder_path: str, tifs_list: list[str], postfix: str, post_
                         'crs': crs_ref,
                     })
 
+    if meta_ref is None:
+        meta_ref = copy.deepcopy(meta)
+        crs_ref = copy.deepcopy(src.crs)
+        array_ref = np.empty((meta_ref['height'], meta_ref['width']), dtype=meta_ref['dtype'])
+
     print(f'\t\t\tReference resolution: , {meta_ref["width"]}x{meta_ref["height"]}')
 
     # Extract the pixel values from each dataset and store them in a numpy array:
@@ -187,7 +192,7 @@ def tifs_2_tif_depth(folder_path: str, tifs_list: list[str], postfix: str, post_
     if not arrays:
         print(f'\t\t\t\tAll files are empty, copying first file to output file: {tifs_list[0]}')
         shutil.copy(os.path.join(folder_path, tifs_list[0]), output_file)
-        return output_file
+        return output_file, empty
 
     # Stack the arrays into a single numpy array
     stacked = np.stack(arrays)
