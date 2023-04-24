@@ -170,40 +170,6 @@ def pipeline(n_days: int = N_DAYS):
                                 }
                             )
 
-
-
-                            # ## Create JSON files if they don't exist
-                            # dict_default_values = {
-                            #     'created': str(dt.datetime.utcnow()),
-                            #     'last_edited': str(dt.datetime.utcnow()),
-                            #     'ongoing': False,
-                            #     'ongoing_event_year': None,
-                            #     'ongoing_event_month': None,
-                            #     'ongoing_event_day': None,
-                            #     'stats': {}
-                            # }
-                            #
-                            # # create json at year level
-                            # createJSONifNotExists(
-                            #     json_path=json_path_year,
-                            #     json_file=json_file_year,
-                            #     json_dict={**dict_default_values, **{
-                            #         'total_events_year': 0,
-                            #         'total_days_year': 0,
-                            #         'peak_event': {},
-                            #         'event_by_event': []
-                            #     }}
-                            # )
-                            #
-                            # # read json file
-                            # dict_country = jsonFileToDict(json_path_country, json_file_country)
-                            #
-                            # # read json file
-                            # dict_year = jsonFileToDict(json_path_year, json_file_year)
-
-
-
-
                             # check if empty:
                             print('\t\t\tNot empty? ', end='')
                             if empty:
@@ -218,6 +184,11 @@ def pipeline(n_days: int = N_DAYS):
                                     year_ongoing = dict_country['ongoing_event_year']
                                     month_ongoing = dict_country['ongoing_event_month']
                                     day_ongoing = dict_country['ongoing_event_day']
+
+                                    # get the json year of the ongoing event
+                                    json_path_year = os.path.join(DATA_FOLDER, country, EVENTS_FOLDER, year_ongoing)
+                                    json_file_year = f'{country}_{year_ongoing}.json'
+                                    dict_year = jsonFileToDict(json_path_year, json_file_year)
 
                                     # get the json event of the ongoing event
                                     json_path_event = os.path.join(DATA_FOLDER, country, EVENTS_FOLDER,
