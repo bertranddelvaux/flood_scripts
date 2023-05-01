@@ -26,6 +26,8 @@ from utils.tif import tifs_2_tif_depth, tif_2_array
 
 from utils.stats import array_2_stats
 
+from utils.sftp import download_data_from_sftp
+
 
 def clean_buffer(year: str, month: str, day: str, list_countries: list[str] = LIST_COUNTRIES, n_days: int = N_DAYS) -> None:
     """
@@ -375,13 +377,50 @@ def pipeline(start_date: str = None, end_date: str = None, n_days: int = N_DAYS,
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Populate the buffer folder with the latest data from JBA\'s server')
-    #parser.add_argument('-d', '--data_folder', help='Path folder for the data', default='data')
-    parser.add_argument('-n', '--n_days', help='Number of days to populate', type=int, default=11)
+    parser.add_argument('-n', '--n_days', help='Number of days of forecast to populate', type=int, default=11)
     parser.add_argument('-s', '--start_date', help='Start date (YYYY_MM_DD)', type=str, default=None)
     parser.add_argument('-e', '--end_date', help='End date (YYYY_MM_DD)', type=str, default=None)
+    parser.add_argument('-c', '--list_countries', help='List of countries to populate', type=str, nargs='+', default=LIST_COUNTRIES)
+    parser.add_argument('-h', '--historic', help='Run historic data', action='store_true', default=False)
     args = parser.parse_args()
 
-    pipeline(n_days=args.n_days, start_date=args.start_date, end_date=args.end_date)#args.data_folder)
+    if not(args.historic):
+        pipeline(start_date=args.start_date, end_date=args.end_date, n_days=args.n_days)
+    else:
+        n_days = 1  # so that the pipeline does not keep forecasts from the past
+        list_countries = args.list_countries
+
+        # Check the latest running date ('rd' in the file) in the buffer folder
+        for country in list_countries:
+            if os.path.exists(os.path.join(DATA_FOLDER, country, RASTER_FOLDER, BUFFER_FOLDER)):
+                # Get the latest running date ('rd' in the file) in the buffer folder
+                list_files = [f for f in os.listdir(os.path.join(DATA_FOLDER, country, RASTER_FOLDER, BUFFER_FOLDER)) if 'rd' in f]
+                if len(list_files) > 0:
+                    latest_date = sorted(list_files)[-1].split('rd')[1].split('.')[0]
+                    print(f'Latest date in buffer folder: {latest_date}')
+
+                    # download data from sftp and run pipeline from the next day, for 1 day and 1 day of forecast (n_days=1)
+                    year, month, day = latest_date[:4], latest_date[4:6], latest_date[6:8]
+                    year_n, month_n, day_n = increment_day(year, month, day, 1)
+                    start_date = f'{year_n}_{month_n}_{day_n}'
+                    end_date = f'{year_n}_{month_n}_{day_n}'
+                else:
+                    latest_date = None
+                    print(f'No files in buffer folder')
+                    # run pipeline from the beginning, for 1 day and 1 day of forecast (n_days=1)
+
+                    start_date = '2022_04_25'
+                    end_date = '2022_04_25'
+
+                # download from sftp
+                download_data_from_sftp(start_date=start_date, end_date=end_date, n_days=n_days,
+                                        list_countries=list_countries)
+
+                # pipeline to process data
+                pipeline(start_date=f'{year_n}_{month_n}_{day_n}', end_date=f'{year_n}_{month_n}_{day_n}',
+                         n_days=n_days)
+
+
 
     #TODO: Recommendation to run hisotrical data
     # --start_date <first_date> --n_days 1
