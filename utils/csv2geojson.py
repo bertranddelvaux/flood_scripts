@@ -44,9 +44,9 @@ def csv2geojson(csv_file, shp_file, output_file, decimals=2):
 
     # Write the dataframe into a processed csv
     merged.drop(columns='geometry').to_csv(output_file.replace('.geojson', '_processed.csv'))
-    merged_adm2 = merged.drop(columns=['geometry','ADM0_CODE','ADM1_CODE','ADM2_CODE']).groupby(by=['ADM0_NAME','ADM1_NAME','ADM2_NAME'],as_index=False).sum()
-    merged_adm1 = merged.drop(columns=['geometry','ADM0_CODE','ADM1_CODE','ADM2_CODE']).groupby(by=['ADM0_NAME','ADM1_NAME'],as_index=False).sum()
-    merged_adm0 = merged.drop(columns=['geometry','ADM0_CODE','ADM1_CODE','ADM2_CODE']).groupby(by=['ADM0_NAME'],as_index=False).sum()
+    merged_adm2 = merged.drop(columns=['geometry','ADM0_CODE','ADM1_CODE','ADM2_CODE']).groupby(by=['ADM0_NAME','ADM1_NAME','ADM2_NAME'],as_index=False).sum(numeric_only=True)
+    merged_adm1 = merged.drop(columns=['geometry','ADM0_CODE','ADM1_CODE','ADM2_CODE']).groupby(by=['ADM0_NAME','ADM1_NAME'],as_index=False).sum(numeric_only=True)
+    merged_adm0 = merged.drop(columns=['geometry','ADM0_CODE','ADM1_CODE','ADM2_CODE']).groupby(by=['ADM0_NAME'],as_index=False).sum(numeric_only=True)
     merged_adm2.to_csv(output_file.replace('.geojson', '_adm2_processed.csv'))
     merged_adm1.to_csv(output_file.replace('.geojson', '_adm1_processed.csv'))
     merged_adm0.to_csv(output_file.replace('.geojson', '_adm0_processed.csv'))
