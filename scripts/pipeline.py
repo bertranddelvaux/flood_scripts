@@ -448,7 +448,7 @@ if __name__ == "__main__":
                 list_files = [f for f in os.listdir(os.path.join(DATA_FOLDER, country, RASTER_FOLDER, BUFFER_FOLDER)) if 'rd' in f]
                 if len(list_files) > 0:
                     latest_date = sorted(list_files)[-1].split('rd')[1].split('.')[0]
-                    print(f'Latest date in buffer folder: {latest_date}')
+                    print(f'\n\033[95mLatest date in buffer folder: {latest_date}\033[0m')
 
                     # download data from sftp and run pipeline from the next day, for 1 day and 1 day of forecast (n_days=1)
                     year, month, day = latest_date[:4], latest_date[4:6], latest_date[6:8]
@@ -457,7 +457,7 @@ if __name__ == "__main__":
                     end_date = f'{year_n}_{month_n}_{day_n}'
             else:
                 latest_date = None
-                print(f'No files in buffer folder')
+                print(f'\n\033[95mNo files in buffer folder\033[0m')
                 # run pipeline from the beginning, for 1 day and 1 day of forecast (n_days=1)
 
                 start_date = HISTORICAL_STARTING_DATES[country] # '2022_09_01'  # first date of data collection from JBA's sftp
