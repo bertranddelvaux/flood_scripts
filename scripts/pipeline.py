@@ -467,9 +467,9 @@ if __name__ == "__main__":
 
             # download from sftp
             download_data_from_sftp(start_date=start_date, end_date=end_date, n_days=n_days,
-                                    list_countries=list_countries)
+                                    list_countries=[country])
 
             # pipeline to process data
             pipeline(start_date=start_date, end_date=end_date,
-                     n_days=n_days)
+                     n_days=n_days, list_countries=[country])
 
