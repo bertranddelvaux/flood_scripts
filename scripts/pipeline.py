@@ -417,8 +417,6 @@ def pipeline(start_date: str = None, end_date: str = None, n_days: int = N_DAYS,
     # clean buffer
     clean_buffer_impacts(year, month, day, list_countries=LIST_COUNTRIES, n_days=n_days)
 
-    exit()
-
 
 
 
