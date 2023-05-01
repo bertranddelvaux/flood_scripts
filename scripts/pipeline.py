@@ -309,12 +309,14 @@ def pipeline(start_date: str = None, end_date: str = None, n_days: int = N_DAYS,
                                 ## Copy files
 
                                 # copy the depth file
-                                depth_file = [os.path.join(DATA_FOLDER, country, RASTER_FOLDER, BUFFER_FOLDER, f) for f in os.listdir(os.path.join(DATA_FOLDER, country, RASTER_FOLDER, BUFFER_FOLDER)) if f'fe{year_ongoing}{month_ongoing}{day_ongoing}' in f and 'depth.tif' in f][0]
+                                depth_file = [os.path.join(DATA_FOLDER, country, RASTER_FOLDER, BUFFER_FOLDER, f) for f in os.listdir(os.path.join(DATA_FOLDER, country, RASTER_FOLDER, BUFFER_FOLDER)) if f'rd{year_ongoing}{month_ongoing}{day_ongoing}' in f and 'depth.tif' in f][0]
                                 shutil.copy(depth_file, os.path.join(json_path_event, os.path.basename(depth_file)))
+                                print(f'\t\t\t\t\033[34mCopied {os.path.basename(depth_file)}... \033[0m')
 
                                 # copy the impact file
                                 impact_file = [os.path.join(DATA_FOLDER, country, IMPACTS_FOLDER, f) for f in os.listdir(os.path.join(DATA_FOLDER, country, IMPACTS_FOLDER)) if f'rd{year_ongoing}{month_ongoing}{day_ongoing}' in f and '.csv' in f][0]
                                 shutil.copy(impact_file, os.path.join(json_path_event, os.path.basename(impact_file)))
+                                print(f'\t\t\t\t\033[34mCopied {os.path.basename(impact_file)}... \033[0m')
 
                                 # update ongoing event
                                 print('\t\t\tUpdating ongoing event... ')
@@ -333,11 +335,27 @@ def pipeline(start_date: str = None, end_date: str = None, n_days: int = N_DAYS,
                                 # update the json event of the ongoing event
                                 dict_event['total_days_event'] += 1
                                 dict_event['day_by_day'].append({
-                                    'day': i_day,
+                                    'day': dict_event['total_days_event'],
                                     'stats': stats
                                 })
-                                dict_event['stats'] = {**dict_event['stats'],
-                                                       **stats}
+
+                                if dict_event['total_days_event'] == 1:
+                                    dict_event['peak_day'] = {
+                                        'day': dict_event['total_days_event'],
+                                        'stats': stats
+                                    }
+                                    dict_event['stats'] = stats
+                                else:
+                                    # update the stats of the event: take the maximum value of each stat
+                                    for stat in dict_event['stats']:
+                                        dict_event['stats'][stat] = max(dict_event['stats'][stat], stats[stat])
+                                    #dict_event['stats'] = {**dict_event['stats'],
+                                                           #**stats}
+                                    if stats['severity_index_1m'] > dict_event['stats']['severity_index_1m']:
+                                        dict_event['peak_day'] = {
+                                        'day': dict_event['total_days_event'],
+                                        'stats': stats
+                                    }
 
                                 # TODO: add comparison with previous day and keep the 'best' one
                                 # TODO: add logic for peak day
@@ -409,7 +427,7 @@ if __name__ == "__main__":
                     print(f'No files in buffer folder')
                     # run pipeline from the beginning, for 1 day and 1 day of forecast (n_days=1)
 
-                    start_date = '2022_04_25'
+                    start_date = '2022_04_25'  # first date of data collection from JBA's sftp
                     end_date = '2022_04_25'
 
                 # download from sftp
