@@ -105,10 +105,21 @@ def pipeline(start_date: str = None, end_date: str = None, n_days: int = N_DAYS)
                     if fe > rd or rd < f'{year_last}{month_last}{day_last}':
                         os.remove(os.path.join(path, file))
 
-        # Get the latest data from JBA's server
-        with pysftp.Connection(host=HOSTNAME, username=USERNAME, password=PASSWORD, cnopts=cnopts) as sftp:
 
-            for country in LIST_COUNTRIES:
+        for country in LIST_COUNTRIES:
+
+            #TODO: ultimately, check if this is necessary
+            # intialize dicts
+            json_path_country = None
+            json_file_country = None
+            json_path_year = None
+            json_file_year = None
+            json_path_event = None
+            json_file_event = None
+
+            # Get the latest data from JBA's server
+            with pysftp.Connection(host=HOSTNAME, username=USERNAME, password=PASSWORD, cnopts=cnopts) as sftp:
+
                 print(f'Fetching data for {country}...')
 
                 # Initialize JSON country file
@@ -148,7 +159,6 @@ def pipeline(start_date: str = None, end_date: str = None, n_days: int = N_DAYS)
                             # print day
                             print(f'\t\tProcessing \033[1mday {i_day}\033[0m : ({year_n}-{month_n}-{day_n}) ... ')
 
-                            #TODO: RESTORE ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
                             # create depth map
                             success, empty = process_files_include_exclude(
                                 include_str=f'fe{year_n}{month_n}{day_n}',
@@ -164,7 +174,6 @@ def pipeline(start_date: str = None, end_date: str = None, n_days: int = N_DAYS)
                                 print(f'(\033[1mday {i_day}\033[0m)')
                             else:
                                 print(f'\t\t\033[31mCould not create depth map for day \033[1m{i_day}\033[0m')
-                            # TODO: RESTORE ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
                             #TODO: REMOVE ------------------------------------------------------------------------------------------
                             # import random
@@ -235,6 +244,8 @@ def pipeline(start_date: str = None, end_date: str = None, n_days: int = N_DAYS)
 
                                         dict_year['total_events_year'] += 1
                                         dict_year['total_days_year'] += dict_event['total_days_event']
+
+                                        #TODO: pick up the biggest numbers from the ongoing event and put them in the peak event: flooded area, flooded population, losses, severity_index
 
                                         dict_country = save_json_last_edit(json_path_country, json_file_country, dict_country)
                                         dict_year = save_json_last_edit(json_path_year, json_file_year, dict_year)
@@ -347,9 +358,10 @@ def pipeline(start_date: str = None, end_date: str = None, n_days: int = N_DAYS)
                                         'stats': stats
                                     })
                                     dict_event['stats'] = {**dict_event['stats'],
-                                                           **stats}  # TODO: add comparison with previous day and keep the 'best' one
-                                    # TODO: add logic for peak day
+                                                           **stats}
 
+                                    # TODO: add comparison with previous day and keep the 'best' one
+                                    # TODO: add logic for peak day
                                     # compare the severity_index_1m of the current day with the peak day, and replace if higher
                                     if dict_event['peak_day'] is None:
                                         dict_event['peak_day'] = {
@@ -368,7 +380,6 @@ def pipeline(start_date: str = None, end_date: str = None, n_days: int = N_DAYS)
                                         json_file=json_file_event,
                                         json_dict=dict_event
                                     )
-                                    dict_event['last_edited'] = str(dt.datetime.utcnow())
 
         # increment day
         year, month, day = increment_day(year, month, day, 1)
@@ -387,6 +398,11 @@ if __name__ == "__main__":
     #parser.add_argument('-d', '--data_folder', help='Path folder for the data', default='data')
     parser.add_argument('-n', '--n_days', help='Number of days to populate', type=int, default=11)
     parser.add_argument('-s', '--start_date', help='Start date (YYYY_MM_DD)', type=str, default=None)
+    parser.add_argument('-e', '--end_date', help='End date (YYYY_MM_DD)', type=str, default=None)
     args = parser.parse_args()
 
-    pipeline(n_days=args.n_days, start_date=args.start_date)#args.data_folder)
+    pipeline(n_days=args.n_days, start_date=args.start_date, end_date=args.end_date)#args.data_folder)
+
+    #TODO: Recommendation to run hisotrical data
+    # --start_date <first_date> --n_days 1
+    # in that way, it won't run and keep/delete unnecessary files (forecast)
