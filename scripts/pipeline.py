@@ -309,12 +309,12 @@ def pipeline(start_date: str = None, end_date: str = None, n_days: int = N_DAYS,
                                 ## Copy files
 
                                 # copy the depth file
-                                depth_file = [os.path.join(DATA_FOLDER, country, RASTER_FOLDER, BUFFER_FOLDER, f) for f in os.listdir(os.path.join(DATA_FOLDER, country, RASTER_FOLDER, BUFFER_FOLDER)) if f'rd{year_ongoing}{month_ongoing}{day_ongoing}' in f and 'depth.tif' in f][0]
+                                depth_file = [os.path.join(DATA_FOLDER, country, RASTER_FOLDER, BUFFER_FOLDER, f) for f in os.listdir(os.path.join(DATA_FOLDER, country, RASTER_FOLDER, BUFFER_FOLDER)) if f'rd{year}{month}{day}' in f and 'depth.tif' in f][0]
                                 shutil.copy(depth_file, os.path.join(json_path_event, os.path.basename(depth_file)))
                                 print(f'\t\t\t\t\033[34mCopied {os.path.basename(depth_file)}... \033[0m')
 
                                 # copy the impact file
-                                impact_file = [os.path.join(DATA_FOLDER, country, IMPACTS_FOLDER, f) for f in os.listdir(os.path.join(DATA_FOLDER, country, IMPACTS_FOLDER)) if f'rd{year_ongoing}{month_ongoing}{day_ongoing}' in f and '.csv' in f][0]
+                                impact_file = [os.path.join(DATA_FOLDER, country, IMPACTS_FOLDER, f) for f in os.listdir(os.path.join(DATA_FOLDER, country, IMPACTS_FOLDER)) if f'rd{year}{month}{day}' in f and '.csv' in f][0]
                                 shutil.copy(impact_file, os.path.join(json_path_event, os.path.basename(impact_file)))
                                 print(f'\t\t\t\t\033[34mCopied {os.path.basename(impact_file)}... \033[0m')
 
@@ -360,17 +360,17 @@ def pipeline(start_date: str = None, end_date: str = None, n_days: int = N_DAYS,
                                 # TODO: add comparison with previous day and keep the 'best' one
                                 # TODO: add logic for peak day
                                 # compare the severity_index_1m of the current day with the peak day, and replace if higher
-                                if dict_event['peak_day'] is None:
-                                    dict_event['peak_day'] = {
-                                        'day': i_day,
-                                        'stats': stats
-                                    }
-                                else:
-                                    if stats['severity_index_1m'] > dict_event['peak_day']['stats']['severity_index_1m']:
-                                        dict_event['peak_day'] = {
-                                            'day': i_day,
-                                            'stats': stats
-                                        }
+                                # if dict_event['peak_day'] is None:
+                                #     dict_event['peak_day'] = {
+                                #         'day': i_day,
+                                #         'stats': stats
+                                #     }
+                                # else:
+                                #     if stats['severity_index_1m'] > dict_event['peak_day']['stats']['severity_index_1m']:
+                                #         dict_event['peak_day'] = {
+                                #             'day': i_day,
+                                #             'stats': stats
+                                #         }
 
                                 dict_event = save_json_last_edit(
                                     json_path=json_path_event,
