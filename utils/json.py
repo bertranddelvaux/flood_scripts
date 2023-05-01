@@ -17,9 +17,10 @@ def createJSONifNotExists(json_path: str, json_file: str, json_dict: dict) -> di
             json.dump(json_dict, fp)
             print(f'\t\t\t\t\033[34mCreating file {json_file}...\033[0m')
             return json_dict
-
-    with open(path, 'r') as fp:
-        return json.load(fp)
+    else:
+        with open(path, 'r') as fp:
+            json_dict = json.load(fp)
+            return json_dict
 
 def jsonFileToDict(json_path: str, json_file: str) -> dict:
     """
