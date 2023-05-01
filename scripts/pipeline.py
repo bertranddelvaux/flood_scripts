@@ -52,8 +52,8 @@ def clean_buffer(year: str, month: str, day: str, list_countries: list[str] = LI
                 if fe > rd or rd < f'{year_last}{month_last}{day_last}':
                     os.remove(os.path.join(path, file))
 
-def process_files_include_exclude(include_str_list:list[str], exclude_str_list:list[str], buffer_path:str, postfix='_depth.tif',
-                                  n_bands=211, threshold=0.8) -> tuple[bool, bool]:
+def process_files_include_exclude(include_str_list:list[str], exclude_str_list:list[str], buffer_path:str, postfix:str ='_depth.tif',
+                                  n_bands:float =211, threshold:float =0.8) -> tuple[bool, bool]:
 
     # get list of files
     list_files = [tif for tif in os.listdir(buffer_path) if all(include_str in tif for include_str in include_str_list) and include_str_list and not any(
