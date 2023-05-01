@@ -30,3 +30,6 @@ DICT_DEFAULT_VALUES = {
     'ongoing_event_day': None,
     'stats': {}
 }
+
+# Countries folder
+COUNTRIES_FOLDER = 'countries'

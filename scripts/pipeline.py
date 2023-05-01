@@ -12,7 +12,7 @@ import datetime as dt
 import argparse
 
 
-from constants.constants import DATA_FOLDER, RASTER_FOLDER, IMPACTS_FOLDER, EVENTS_FOLDER, LIST_COUNTRIES, LIST_SUBFOLDERS_BUFFER, BUFFER_FOLDER, N_DAYS
+from constants.constants import DATA_FOLDER, RASTER_FOLDER, IMPACTS_FOLDER, EVENTS_FOLDER, LIST_COUNTRIES, LIST_SUBFOLDERS_BUFFER, BUFFER_FOLDER, N_DAYS, COUNTRIES_FOLDER
 
 from utils.files import createFolderIfNotExists, createDataTreeStructure, DICT_DATA_TREE
 
@@ -27,6 +27,8 @@ from utils.tif import tifs_2_tif_depth, tif_2_array
 from utils.stats import array_2_stats
 
 from utils.sftp import download_data_from_sftp
+
+from utils.csv2geojson import csv2geojson
 
 
 def clean_buffer(year: str, month: str, day: str, list_countries: list[str] = LIST_COUNTRIES, n_days: int = N_DAYS) -> None:
@@ -141,7 +143,18 @@ def pipeline(start_date: str = None, end_date: str = None, n_days: int = N_DAYS,
             for sub_folder in LIST_SUBFOLDERS_BUFFER:
                 print(f'\tProcessing {sub_folder} data...')
 
-                if sub_folder == RASTER_FOLDER:
+                if sub_folder == IMPACTS_FOLDER:
+                    folder_path = os.path.join(DATA_FOLDER, country, sub_folder)
+                    csv_file = [os.path.join(folder_path, f) for f in os.listdir(folder_path) if f'rd{year}{month}{day}' in f and f.endswith('.csv') and not f.endswith('_processed.csv')][0]
+                    print(f'\t\tProcessing {csv_file}', end='')
+                    merged_adm0, merged_adm1, merged_adm2 = csv2geojson(
+                        csv_file=csv_file,
+                        shp_file=os.path.join(COUNTRIES_FOLDER,f'{country}_adm_shapefile.zip'),
+                        output_file=csv_file.replace('.csv', '.geojson')
+                    )
+                    print(f'\033[32m' + '✔' + '\033[0m')
+
+                elif sub_folder == RASTER_FOLDER:
                     tmp_path = os.path.join(DATA_FOLDER, country, sub_folder, BUFFER_FOLDER)
                     createFolderIfNotExists(tmp_path)
 
@@ -314,9 +327,10 @@ def pipeline(start_date: str = None, end_date: str = None, n_days: int = N_DAYS,
                                 print(f'\t\t\t\t\033[34mCopied {os.path.basename(depth_file)}... \033[0m')
 
                                 # copy the impact file
-                                impact_file = [os.path.join(DATA_FOLDER, country, IMPACTS_FOLDER, f) for f in os.listdir(os.path.join(DATA_FOLDER, country, IMPACTS_FOLDER)) if f'rd{year}{month}{day}' in f and '.csv' in f][0]
-                                shutil.copy(impact_file, os.path.join(json_path_event, os.path.basename(impact_file)))
-                                print(f'\t\t\t\t\033[34mCopied {os.path.basename(impact_file)}... \033[0m')
+                                impact_files = [os.path.join(DATA_FOLDER, country, IMPACTS_FOLDER, f) for f in os.listdir(os.path.join(DATA_FOLDER, country, IMPACTS_FOLDER)) if f'rd{year}{month}{day}' in f and '.csv' in f or '.geojson' in f]
+                                for impact_file in impact_files:
+                                    shutil.copy(impact_file, os.path.join(json_path_event, os.path.basename(impact_file)))
+                                    print(f'\t\t\t\t\033[34mCopied {os.path.basename(impact_file)}... \033[0m')
 
                                 # update ongoing event
                                 print('\t\t\tUpdating ongoing event... ')
@@ -336,7 +350,10 @@ def pipeline(start_date: str = None, end_date: str = None, n_days: int = N_DAYS,
                                 dict_event['total_days_event'] += 1
                                 dict_event['day_by_day'].append({
                                     'day': dict_event['total_days_event'],
-                                    'stats': stats
+                                    'stats': stats,
+                                    'adm0': merged_adm0.to_dict(orient='records'),
+                                    'adm1': merged_adm1.to_dict(orient='records'),
+                                    'adm2': merged_adm2.to_dict(orient='records'),
                                 })
 
                                 if dict_event['total_days_event'] == 1:
