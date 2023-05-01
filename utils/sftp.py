@@ -23,7 +23,19 @@ def download_data_from_sftp(
         n_days: int = N_DAYS,
         list_countries: list[str] = LIST_COUNTRIES,
         exclude_str: str ='Agreement'
-):
+) -> None:
+    """
+    Download data from JBA's sftp server for a given date and a given list of countries
+    :param year:
+    :param month:
+    :param day:
+    :param start_date:
+    :param end_date:
+    :param n_days:
+    :param list_countries:
+    :param exclude_str:
+    :return:
+    """
 
     # date message
     date_msg = f'{year}_{month}_{day}'
