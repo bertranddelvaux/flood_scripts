@@ -54,6 +54,16 @@ def clean_buffer(year: str, month: str, day: str, list_countries: list[str] = LI
 
 def process_files_include_exclude(include_str_list:list[str], exclude_str_list:list[str], buffer_path:str, postfix:str ='_depth.tif',
                                   n_bands:float =211, threshold:float =0.8) -> tuple[bool, bool]:
+    """
+    Process files in buffer folder
+    :param include_str_list:
+    :param exclude_str_list:
+    :param buffer_path:
+    :param postfix:
+    :param n_bands:
+    :param threshold:
+    :return:
+    """
 
     # get list of files
     list_files = [tif for tif in os.listdir(buffer_path) if all(include_str in tif for include_str in include_str_list) and include_str_list and not any(
@@ -77,6 +87,14 @@ def process_files_include_exclude(include_str_list:list[str], exclude_str_list:l
 
 
 def pipeline(start_date: str = None, end_date: str = None, n_days: int = N_DAYS, list_countries: list[str] = LIST_COUNTRIES):
+    """
+    Pipeline to populate ARC's Flood Explorer buffer
+    :param start_date:
+    :param end_date:
+    :param n_days:
+    :param list_countries:
+    :return:
+    """
 
     # Make sure that the data tree structure exists
     createDataTreeStructure()
