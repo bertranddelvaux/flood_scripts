@@ -8,6 +8,7 @@
 import os
 import shutil
 import time
+import json
 import datetime as dt
 import argparse
 
@@ -415,6 +416,7 @@ def pipeline(start_date: str = None, end_date: str = None, n_days: int = N_DAYS,
         year, month, day = increment_day(year, month, day, 1)
 
     # clean buffer
+    print('\t\t\tCleaning buffer...')
     clean_buffer_impacts(year, month, day, list_countries=LIST_COUNTRIES, n_days=n_days)
 
 
@@ -443,18 +445,34 @@ if __name__ == "__main__":
 
         # Check the latest running date ('rd' in the file) in the buffer folder
         for country in list_countries:
-            if os.path.exists(os.path.join(DATA_FOLDER, country, RASTER_FOLDER, BUFFER_FOLDER)):
-                # Get the latest running date ('rd' in the file) in the buffer folder
-                list_files = [f for f in os.listdir(os.path.join(DATA_FOLDER, country, RASTER_FOLDER, BUFFER_FOLDER)) if 'rd' in f]
-                if len(list_files) > 0:
-                    latest_date = sorted(list_files)[-1].split('rd')[1].split('.')[0]
-                    print(f'\n\033[95mLatest date in buffer folder: {latest_date}\033[0m')
+            path_latest_date = os.path.join(DATA_FOLDER, country, 'latest_date.json')
 
-                    # download data from sftp and run pipeline from the next day, for 1 day and 1 day of forecast (n_days=1)
-                    year, month, day = latest_date[:4], latest_date[4:6], latest_date[6:8]
-                    year_n, month_n, day_n = increment_day(year, month, day, 1)
-                    start_date = f'{year_n}_{month_n}_{day_n}'
-                    end_date = f'{year_n}_{month_n}_{day_n}'
+            if os.path.exists(path_latest_date):
+                with open(path_latest_date, 'r') as f:
+                    last_run = json.load(f)
+
+                latest_date = last_run['latest_date']
+                print(f'\n\033[95mLatest date in buffer folder: {latest_date}\033[0m')
+
+                # download data from sftp and run pipeline from the next day, for 1 day and 1 day of forecast (n_days=1)
+                year, month, day = latest_date.split('_')
+                year_n, month_n, day_n = increment_day(year, month, day, 1)
+                start_date = f'{year_n}_{month_n}_{day_n}'
+                end_date = f'{year_n}_{month_n}_{day_n}'
+
+
+            # if os.path.exists(os.path.join(DATA_FOLDER, country, RASTER_FOLDER, BUFFER_FOLDER)):
+            #     # Get the latest running date ('rd' in the file) in the buffer folder
+            #     list_files = [f for f in os.listdir(os.path.join(DATA_FOLDER, country, RASTER_FOLDER, BUFFER_FOLDER)) if 'rd' in f]
+            #     if len(list_files) > 0:
+            #         latest_date = sorted(list_files)[-1].split('rd')[1].split('.')[0]
+            #         print(f'\n\033[95mLatest date in buffer folder: {latest_date}\033[0m')
+            #
+            #         # download data from sftp and run pipeline from the next day, for 1 day and 1 day of forecast (n_days=1)
+            #         year, month, day = latest_date[:4], latest_date[4:6], latest_date[6:8]
+            #         year_n, month_n, day_n = increment_day(year, month, day, 1)
+            #         start_date = f'{year_n}_{month_n}_{day_n}'
+            #         end_date = f'{year_n}_{month_n}_{day_n}'
             else:
                 latest_date = None
                 print(f'\n\033[95mNo files in buffer folder\033[0m')
@@ -470,4 +488,8 @@ if __name__ == "__main__":
             # pipeline to process data
             pipeline(start_date=start_date, end_date=end_date,
                      n_days=n_days, list_countries=[country])
+
+            # create json file with latest date
+            with open(path_latest_date, 'w') as fp:
+                json.dump({'latest_date': start_date}, fp)
 
