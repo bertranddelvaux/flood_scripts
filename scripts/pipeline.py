@@ -12,7 +12,7 @@ import datetime as dt
 import argparse
 
 
-from constants.constants import DATA_FOLDER, RASTER_FOLDER, IMPACTS_FOLDER, EVENTS_FOLDER, LIST_COUNTRIES, LIST_SUBFOLDERS_BUFFER, BUFFER_FOLDER, N_DAYS, COUNTRIES_FOLDER
+from constants.constants import DATA_FOLDER, RASTER_FOLDER, IMPACTS_FOLDER, EVENTS_FOLDER, LIST_COUNTRIES, LIST_SUBFOLDERS_BUFFER, BUFFER_FOLDER, N_DAYS, COUNTRIES_FOLDER, HISTORICAL_STARTING_DATES
 
 from utils.files import createFolderIfNotExists, createDataTreeStructure, DICT_DATA_TREE
 
@@ -432,14 +432,16 @@ if __name__ == "__main__":
     parser.add_argument('-s', '--start_date', help='Start date (YYYY_MM_DD)', type=str, default=None)
     parser.add_argument('-e', '--end_date', help='End date (YYYY_MM_DD)', type=str, default=None)
     parser.add_argument('-c', '--list_countries', help='List of countries to populate', type=str, nargs='+', default=LIST_COUNTRIES)
-    parser.add_argument('-h', '--historic', help='Run historic data', action='store_true', default=False)
+    parser.add_argument('-hist', '--historic', help='Run historic data', action='store_true', default=False)
     args = parser.parse_args()
 
-    if not(args.historic):
+    if not args.historic:
         pipeline(start_date=args.start_date, end_date=args.end_date, n_days=args.n_days)
     else:
         n_days = 1  # so that the pipeline does not keep forecasts from the past
         list_countries = args.list_countries
+        start_date = args.start_date
+        end_date = args.end_date
 
         # Check the latest running date ('rd' in the file) in the buffer folder
         for country in list_countries:
@@ -455,24 +457,19 @@ if __name__ == "__main__":
                     year_n, month_n, day_n = increment_day(year, month, day, 1)
                     start_date = f'{year_n}_{month_n}_{day_n}'
                     end_date = f'{year_n}_{month_n}_{day_n}'
-                else:
-                    latest_date = None
-                    print(f'No files in buffer folder')
-                    # run pipeline from the beginning, for 1 day and 1 day of forecast (n_days=1)
+            else:
+                latest_date = None
+                print(f'No files in buffer folder')
+                # run pipeline from the beginning, for 1 day and 1 day of forecast (n_days=1)
 
-                    start_date = '2022_04_25'  # first date of data collection from JBA's sftp
-                    end_date = '2022_04_25'
+                start_date = HISTORICAL_STARTING_DATES[country] # '2022_09_01'  # first date of data collection from JBA's sftp
+                end_date = HISTORICAL_STARTING_DATES[country]
 
-                # download from sftp
-                download_data_from_sftp(start_date=start_date, end_date=end_date, n_days=n_days,
-                                        list_countries=list_countries)
+            # download from sftp
+            download_data_from_sftp(start_date=start_date, end_date=end_date, n_days=n_days,
+                                    list_countries=list_countries)
 
-                # pipeline to process data
-                pipeline(start_date=f'{year_n}_{month_n}_{day_n}', end_date=f'{year_n}_{month_n}_{day_n}',
-                         n_days=n_days)
+            # pipeline to process data
+            pipeline(start_date=start_date, end_date=end_date,
+                     n_days=n_days)
 
-
-
-    #TODO: Recommendation to run hisotrical data
-    # --start_date <first_date> --n_days 1
-    # in that way, it won't run and keep/delete unnecessary files (forecast)
