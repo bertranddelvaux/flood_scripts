@@ -31,7 +31,7 @@ from utils.sftp import download_data_from_sftp
 from utils.csv2geojson import csv2geojson
 
 
-def clean_buffer(year: str, month: str, day: str, list_countries: list[str] = LIST_COUNTRIES, n_days: int = N_DAYS) -> None:
+def clean_buffer_impacts(year: str, month: str, day: str, list_countries: list[str] = LIST_COUNTRIES, n_days: int = N_DAYS) -> None:
     """
     Remove past files which are not day 0, i.e. depth maps whose file name rdYYYYMMDD and feYYYYMMDD are different
     :param year:
@@ -43,6 +43,8 @@ def clean_buffer(year: str, month: str, day: str, list_countries: list[str] = LI
     """
     # Remove past files which are not day 0, i.e. depth maps whose file name rdYYYYMMDD and feYYYYMMDD are different
     for country in list_countries:
+
+        # clean buffer folder
         path = os.path.join(DATA_FOLDER, country, RASTER_FOLDER, BUFFER_FOLDER)
         if os.path.exists(path):
             for file in os.listdir(path):
@@ -55,6 +57,20 @@ def clean_buffer(year: str, month: str, day: str, list_countries: list[str] = LI
 
                 if fe > rd or rd < f'{year_last}{month_last}{day_last}':
                     os.remove(os.path.join(path, file))
+
+        # clean impacts folder
+        path = os.path.join(DATA_FOLDER, country, IMPACTS_FOLDER)
+        if os.path.exists(path):
+            for file in os.listdir(path):
+                # extract the 8 characters of file name after 'rd'
+                rd = file.split('rd')[1][:8]
+
+                # get the latest date to keep
+                year_last, month_last, day_last = increment_day(year, month, day, -n_days)
+
+                if rd < f'{year_last}{month_last}{day_last}':
+                    os.remove(os.path.join(path, file))
+
 
 def process_files_include_exclude(include_str_list:list[str], exclude_str_list:list[str], buffer_path:str, postfix:str ='_depth.tif',
                                   n_bands:float =211, threshold:float =0.8) -> tuple[bool, bool]:
@@ -399,7 +415,7 @@ def pipeline(start_date: str = None, end_date: str = None, n_days: int = N_DAYS,
         year, month, day = increment_day(year, month, day, 1)
 
     # clean buffer
-    clean_buffer(year, month, day, list_countries=LIST_COUNTRIES, n_days=n_days)
+    clean_buffer_impacts(year, month, day, list_countries=LIST_COUNTRIES, n_days=n_days)
 
     exit()
 
