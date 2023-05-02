@@ -12,6 +12,9 @@ import argparse
 
 import sys
 
+import pandas as pd
+import numpy as np
+
 print(sys.path)
 
 from constants.constants import DATA_FOLDER, RASTER_FOLDER, IMPACTS_FOLDER, EVENTS_FOLDER, LIST_COUNTRIES, \
@@ -34,6 +37,8 @@ from utils.sftp import download_pipeline
 from utils.csv2geojson import csv2geojson
 
 from utils.string_format import colorize_text
+
+from utils.dataframe import sum_list_dict
 
 
 def clean_buffer_impacts(year: str, month: str, day: str, list_countries: list[str] = LIST_COUNTRIES,
@@ -310,7 +315,12 @@ def process_pipeline(start_date: str = None, end_date: str = None, n_days: int =
                                             'total_days_event': 0,
                                             'day_by_day': [],  # TODO: add the first day
                                             # 'stats': {}, #TODO: initialize with the stats of the first day
-                                            'peak_day': None,
+                                            'peak_flood': None,
+                                            'peak_population': None,
+                                            'peak_losses': None,
+                                            'adm0_max': None,
+                                            'adm1_max': None,
+                                            'adm2_max': None,
                                             # TODO: peak day is the day with the highest stats, so the day of the creation, then the day with the highest stats
                                         },
                                         ongoing_year=year_n,
@@ -385,22 +395,34 @@ def process_pipeline(start_date: str = None, end_date: str = None, n_days: int =
                                     pixel_size_y_m=meta['transform'].e
                                 )
 
+                                # adm breakdown
+                                adm0 = merged_adm0.to_dict(orient='records')
+                                adm1 = merged_adm1.to_dict(orient='records')
+                                adm2 = merged_adm2.to_dict(orient='records')
+
                                 # update the json event of the ongoing event
                                 dict_event['total_days_event'] += 1
                                 dict_event['day_by_day'].append({
                                     'day': dict_event['total_days_event'],
                                     'stats': stats,
-                                    'adm0': merged_adm0.to_dict(orient='records'),
-                                    'adm1': merged_adm1.to_dict(orient='records'),
-                                    'adm2': merged_adm2.to_dict(orient='records'),
+                                    'adm0': adm0,
+                                    'adm1': adm1,
+                                    'adm2': adm2,
                                 })
 
                                 if dict_event['total_days_event'] == 1:
-                                    dict_event['peak_day'] = {
+                                    dict_event['peak_flood'] = {
                                         'day': dict_event['total_days_event'],
                                         'stats': stats
                                     }
+                                    dict_event['peak_population'] = {
+                                        'day': dict_event['total_days_event'],
+                                        'population': merged_adm0.to_dict(orient='records')
+                                    }
                                     dict_event['stats'] = stats
+                                    dict_event['adm0_max'] = merged_adm0.to_dict(orient='records')
+                                    dict_event['adm1_max'] = merged_adm1.to_dict(orient='records')
+                                    dict_event['adm2_max'] = merged_adm2.to_dict(orient='records')
                                 else:
                                     # update the stats of the event: take the maximum value of each stat
                                     for stat in dict_event['stats']:
@@ -408,10 +430,23 @@ def process_pipeline(start_date: str = None, end_date: str = None, n_days: int =
                                     # dict_event['stats'] = {**dict_event['stats'],
                                     # **stats}
                                     if stats['severity_index_1m'] > dict_event['stats']['severity_index_1m']:
-                                        dict_event['peak_day'] = {
+                                        dict_event['peak_flood'] = {
                                             'day': dict_event['total_days_event'],
                                             'stats': stats
                                         }
+                                    # if the sum of the numerical values of adm0 is greater than the previous peak
+                                    if sum_list_dict(adm0) > sum_list_dict(dict_event['peak_population']['population']) : #TODO!!!!!!!
+                                        dict_event['peak_population'] = {
+                                            'day': dict_event['total_days_event'],
+                                            'population': adm0
+                                        }
+
+
+                                    dict_event['adm0_max'] = np.maximum(merged_adm0, pd.DataFrame.from_records(dict_event['adm0_max'])).to_dict(orient='records')
+                                    dict_event['adm1_max'] = np.maximum(merged_adm1, pd.DataFrame.from_records(
+                                        dict_event['adm1_max'])).to_dict(orient='records')
+                                    dict_event['adm1_max'] = np.maximum(merged_adm1, pd.DataFrame.from_records(
+                                        dict_event['adm1_max'])).to_dict(orient='records')
 
                                 dict_event = save_json_last_edit(
                                     json_path=json_path_event,
