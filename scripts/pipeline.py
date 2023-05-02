@@ -13,9 +13,11 @@ import datetime as dt
 import argparse
 
 import sys
+
 print(sys.path)
 
-from constants.constants import DATA_FOLDER, RASTER_FOLDER, IMPACTS_FOLDER, EVENTS_FOLDER, LIST_COUNTRIES, LIST_SUBFOLDERS_BUFFER, BUFFER_FOLDER, N_DAYS, COUNTRIES_FOLDER, HISTORICAL_STARTING_DATES
+from constants.constants import DATA_FOLDER, RASTER_FOLDER, IMPACTS_FOLDER, EVENTS_FOLDER, LIST_COUNTRIES, \
+    LIST_SUBFOLDERS_BUFFER, BUFFER_FOLDER, N_DAYS, COUNTRIES_FOLDER, HISTORICAL_STARTING_DATES
 
 from utils.files import createFolderIfNotExists, createDataTreeStructure, DICT_DATA_TREE
 
@@ -34,7 +36,8 @@ from utils.sftp import download_data_from_sftp
 from utils.csv2geojson import csv2geojson
 
 
-def clean_buffer_impacts(year: str, month: str, day: str, list_countries: list[str] = LIST_COUNTRIES, n_days: int = N_DAYS) -> None:
+def clean_buffer_impacts(year: str, month: str, day: str, list_countries: list[str] = LIST_COUNTRIES,
+                         n_days: int = N_DAYS) -> None:
     """
     Remove past files which are not day 0, i.e. depth maps whose file name rdYYYYMMDD and feYYYYMMDD are different
     :param year:
@@ -75,8 +78,9 @@ def clean_buffer_impacts(year: str, month: str, day: str, list_countries: list[s
                     os.remove(os.path.join(path, file))
 
 
-def process_files_include_exclude(include_str_list:list[str], exclude_str_list:list[str], buffer_path:str, postfix:str ='_depth.tif',
-                                  n_bands:float =211, threshold:float =0.8) -> tuple[bool, bool]:
+def process_files_include_exclude(include_str_list: list[str], exclude_str_list: list[str], buffer_path: str,
+                                  postfix: str = '_depth.tif',
+                                  n_bands: float = 211, threshold: float = 0.8) -> tuple[bool, bool]:
     """
     Process files in buffer folder
     :param include_str_list:
@@ -89,15 +93,17 @@ def process_files_include_exclude(include_str_list:list[str], exclude_str_list:l
     """
 
     # get list of files
-    list_files = [tif for tif in os.listdir(buffer_path) if all(include_str in tif for include_str in include_str_list) and include_str_list and not any(
-        exclude_str in tif for exclude_str in exclude_str_list)]
+    list_files = [tif for tif in os.listdir(buffer_path) if
+                  all(include_str in tif for include_str in include_str_list) and include_str_list and not any(
+                      exclude_str in tif for exclude_str in exclude_str_list)]
 
     # check if list is empty
     if len(list_files) == 0:
         raise ValueError(f'No files found in buffer folder containing {", ".join(include_str_list)}')
 
     # process depth map
-    raster_depth_file, empty = tifs_2_tif_depth(folder_path=buffer_path, tifs_list=list_files, postfix=postfix, n_bands=n_bands, threshold=threshold)
+    raster_depth_file, empty = tifs_2_tif_depth(folder_path=buffer_path, tifs_list=list_files, postfix=postfix,
+                                                n_bands=n_bands, threshold=threshold)
     success = True
 
     # remove files from temp folder
@@ -109,7 +115,8 @@ def process_files_include_exclude(include_str_list:list[str], exclude_str_list:l
     return success, empty
 
 
-def pipeline(start_date: str = None, end_date: str = None, n_days: int = N_DAYS, list_countries: list[str] = LIST_COUNTRIES):
+def pipeline(start_date: str = None, end_date: str = None, n_days: int = N_DAYS,
+             list_countries: list[str] = LIST_COUNTRIES):
     """
     Pipeline to populate ARC's Flood Explorer buffer
     :param start_date:
@@ -135,7 +142,8 @@ def pipeline(start_date: str = None, end_date: str = None, n_days: int = N_DAYS,
     year_end, month_end, day_end = end_date.split('_')
 
     # Loop over days between start_date and end_date
-    while (dt.datetime(int(year_end), int(month_end), int(day_end)) - dt.datetime(int(year), int(month), int(day))).days >= 0 :
+    while (dt.datetime(int(year_end), int(month_end), int(day_end)) - dt.datetime(int(year), int(month),
+                                                                                  int(day))).days >= 0:
 
         for country in list_countries:
 
@@ -164,11 +172,13 @@ def pipeline(start_date: str = None, end_date: str = None, n_days: int = N_DAYS,
 
                 if sub_folder == IMPACTS_FOLDER:
                     folder_path = os.path.join(DATA_FOLDER, country, sub_folder)
-                    csv_file = [os.path.join(folder_path, f) for f in os.listdir(folder_path) if f'rd{year}{month}{day}' in f and f.endswith('.csv') and not f.endswith('_processed.csv')][0]
+                    csv_file = [os.path.join(folder_path, f) for f in os.listdir(folder_path) if
+                                f'rd{year}{month}{day}' in f and f.endswith('.csv') and not f.endswith(
+                                    '_processed.csv')][0]
                     print(f'\t\tProcessing {csv_file}', end='')
                     merged_adm0, merged_adm1, merged_adm2 = csv2geojson(
                         csv_file=csv_file,
-                        shp_file=os.path.join(COUNTRIES_FOLDER,f'{country}_adm_shapefile.zip'),
+                        shp_file=os.path.join(COUNTRIES_FOLDER, f'{country}_adm_shapefile.zip'),
                         output_file=csv_file.replace('.csv', '.geojson')
                     )
                     print(f'\033[32m' + '✔' + '\033[0m')
@@ -186,7 +196,7 @@ def pipeline(start_date: str = None, end_date: str = None, n_days: int = N_DAYS,
                         # create depth map
                         success, empty = process_files_include_exclude(
                             include_str_list=[f'fe{year_n}{month_n}{day_n}', f'rd{year}{month}{day}'],
-                            exclude_str_list=['Agreement','_depth'],
+                            exclude_str_list=['Agreement', '_depth'],
                             buffer_path=tmp_path,
                             postfix='_depth.tif',
                             n_bands=211,
@@ -244,21 +254,23 @@ def pipeline(start_date: str = None, end_date: str = None, n_days: int = N_DAYS,
                                     dict_event = jsonFileToDict(json_path_event, json_file_event)
 
                                     # close ongoing event
-                                    print(f'\t\t\t\t\033[95mClosing ongoing event that started on {year_ongoing:04}_{month_ongoing:02}_{day_ongoing:02}... \033[0m')
+                                    print(
+                                        f'\t\t\t\t\033[95mClosing ongoing event that started on {year_ongoing:04}_{month_ongoing:02}_{day_ongoing:02}... \033[0m')
                                     dict_country = set_ongoing_event(json_path_country, json_file_country, False)
                                     dict_year = set_ongoing_event(json_path_year, json_file_year, False)
 
                                     # update jsons
-                                    #TODO: this is where country and year jsons are incremented
+                                    # TODO: this is where country and year jsons are incremented
                                     dict_country['total_events_country'] += 1
                                     dict_country['total_days_country'] += dict_event['total_days_event']
 
                                     dict_year['total_events_year'] += 1
                                     dict_year['total_days_year'] += dict_event['total_days_event']
 
-                                    #TODO: pick up the biggest numbers from the ongoing event and put them in the peak event: flooded area, flooded population, losses, severity_index
+                                    # TODO: pick up the biggest numbers from the ongoing event and put them in the peak event: flooded area, flooded population, losses, severity_index
 
-                                    dict_country = save_json_last_edit(json_path_country, json_file_country, dict_country)
+                                    dict_country = save_json_last_edit(json_path_country, json_file_country,
+                                                                       dict_country)
                                     dict_year = save_json_last_edit(json_path_year, json_file_year, dict_year)
 
                                 else:
@@ -280,7 +292,8 @@ def pipeline(start_date: str = None, end_date: str = None, n_days: int = N_DAYS,
                                     print('\033[31m' + '✘' + '\033[0m')
 
                                     # create new event
-                                    print(f'\t\t\t\t\033[95mOpening new event on {year_n:04}_{month_n:02}_{day_n:02}... \033[0m')
+                                    print(
+                                        f'\t\t\t\t\033[95mOpening new event on {year_n:04}_{month_n:02}_{day_n:02}... \033[0m')
 
                                     # json file for event
                                     json_path_event = os.path.join(DATA_FOLDER, country, EVENTS_FOLDER, year_n,
@@ -293,11 +306,12 @@ def pipeline(start_date: str = None, end_date: str = None, n_days: int = N_DAYS,
                                         json_path=json_path_event,
                                         json_file=json_file_event,
                                         json_dict_update={
-                                            #'ongoing': True,
+                                            # 'ongoing': True,
                                             'total_days_event': 0,
-                                            'day_by_day': [], #TODO: add the first day
-                                            #'stats': {}, #TODO: initialize with the stats of the first day
-                                            'peak_day': None, #TODO: peak day is the day with the highest stats, so the day of the creation, then the day with the highest stats
+                                            'day_by_day': [],  # TODO: add the first day
+                                            # 'stats': {}, #TODO: initialize with the stats of the first day
+                                            'peak_day': None,
+                                            # TODO: peak day is the day with the highest stats, so the day of the creation, then the day with the highest stats
                                         },
                                         ongoing_year=year_n,
                                         ongoing_month=month_n,
@@ -330,7 +344,7 @@ def pipeline(start_date: str = None, end_date: str = None, n_days: int = N_DAYS,
                                 month_ongoing = dict_country['ongoing_event_month']
                                 day_ongoing = dict_country['ongoing_event_day']
 
-                                #print(f'\t\t\t\tOngoing event: {year_ongoing:04}_{month_ongoing:02}_{day_ongoing:02}')
+                                # print(f'\t\t\t\tOngoing event: {year_ongoing:04}_{month_ongoing:02}_{day_ongoing:02}')
 
                                 # get the json event of the ongoing event
                                 json_path_event = os.path.join(DATA_FOLDER, country, EVENTS_FOLDER,
@@ -341,14 +355,20 @@ def pipeline(start_date: str = None, end_date: str = None, n_days: int = N_DAYS,
                                 ## Copy files
 
                                 # copy the depth file
-                                depth_file = [os.path.join(DATA_FOLDER, country, RASTER_FOLDER, BUFFER_FOLDER, f) for f in os.listdir(os.path.join(DATA_FOLDER, country, RASTER_FOLDER, BUFFER_FOLDER)) if f'rd{year}{month}{day}' in f and 'depth.tif' in f][0]
+                                depth_file = \
+                                    [os.path.join(DATA_FOLDER, country, RASTER_FOLDER, BUFFER_FOLDER, f) for f in
+                                     os.listdir(os.path.join(DATA_FOLDER, country, RASTER_FOLDER, BUFFER_FOLDER)) if
+                                     f'rd{year}{month}{day}' in f and 'depth.tif' in f][0]
                                 shutil.copy(depth_file, os.path.join(json_path_event, os.path.basename(depth_file)))
                                 print(f'\t\t\t\t\033[34mCopied {os.path.basename(depth_file)}... \033[0m')
 
                                 # copy the impact file
-                                impact_files = [os.path.join(DATA_FOLDER, country, IMPACTS_FOLDER, f) for f in os.listdir(os.path.join(DATA_FOLDER, country, IMPACTS_FOLDER)) if f'rd{year}{month}{day}' in f and '.csv' in f or '.geojson' in f]
+                                impact_files = [os.path.join(DATA_FOLDER, country, IMPACTS_FOLDER, f) for f in
+                                                os.listdir(os.path.join(DATA_FOLDER, country, IMPACTS_FOLDER)) if
+                                                f'rd{year}{month}{day}' in f and '.csv' in f or '.geojson' in f]
                                 for impact_file in impact_files:
-                                    shutil.copy(impact_file, os.path.join(json_path_event, os.path.basename(impact_file)))
+                                    shutil.copy(impact_file,
+                                                os.path.join(json_path_event, os.path.basename(impact_file)))
                                     print(f'\t\t\t\t\033[34mCopied {os.path.basename(impact_file)}... \033[0m')
 
                                 # update ongoing event
@@ -385,28 +405,13 @@ def pipeline(start_date: str = None, end_date: str = None, n_days: int = N_DAYS,
                                     # update the stats of the event: take the maximum value of each stat
                                     for stat in dict_event['stats']:
                                         dict_event['stats'][stat] = max(dict_event['stats'][stat], stats[stat])
-                                    #dict_event['stats'] = {**dict_event['stats'],
-                                                           #**stats}
+                                    # dict_event['stats'] = {**dict_event['stats'],
+                                    # **stats}
                                     if stats['severity_index_1m'] > dict_event['stats']['severity_index_1m']:
                                         dict_event['peak_day'] = {
-                                        'day': dict_event['total_days_event'],
-                                        'stats': stats
-                                    }
-
-                                # TODO: add comparison with previous day and keep the 'best' one
-                                # TODO: add logic for peak day
-                                # compare the severity_index_1m of the current day with the peak day, and replace if higher
-                                # if dict_event['peak_day'] is None:
-                                #     dict_event['peak_day'] = {
-                                #         'day': i_day,
-                                #         'stats': stats
-                                #     }
-                                # else:
-                                #     if stats['severity_index_1m'] > dict_event['peak_day']['stats']['severity_index_1m']:
-                                #         dict_event['peak_day'] = {
-                                #             'day': i_day,
-                                #             'stats': stats
-                                #         }
+                                            'day': dict_event['total_days_event'],
+                                            'stats': stats
+                                        }
 
                                 dict_event = save_json_last_edit(
                                     json_path=json_path_event,
@@ -422,18 +427,13 @@ def pipeline(start_date: str = None, end_date: str = None, n_days: int = N_DAYS,
     clean_buffer_impacts(year, month, day, list_countries=LIST_COUNTRIES, n_days=n_days)
 
 
-
-
-
-
-
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Populate the buffer folder with the latest data from JBA\'s server')
     parser.add_argument('-n', '--n_days', help='Number of days of forecast to populate', type=int, default=11)
     parser.add_argument('-s', '--start_date', help='Start date (YYYY_MM_DD)', type=str, default=None)
     parser.add_argument('-e', '--end_date', help='End date (YYYY_MM_DD)', type=str, default=None)
-    parser.add_argument('-c', '--list_countries', help='List of countries to populate', type=str, nargs='+', default=LIST_COUNTRIES)
+    parser.add_argument('-c', '--list_countries', help='List of countries to populate', type=str, nargs='+',
+                        default=LIST_COUNTRIES)
     parser.add_argument('-hist', '--historic', help='Run historic data', action='store_true', default=False)
     args = parser.parse_args()
 
@@ -462,25 +462,12 @@ if __name__ == "__main__":
                 start_date = f'{year_n}_{month_n}_{day_n}'
                 end_date = f'{year_n}_{month_n}_{day_n}'
 
-
-            # if os.path.exists(os.path.join(DATA_FOLDER, country, RASTER_FOLDER, BUFFER_FOLDER)):
-            #     # Get the latest running date ('rd' in the file) in the buffer folder
-            #     list_files = [f for f in os.listdir(os.path.join(DATA_FOLDER, country, RASTER_FOLDER, BUFFER_FOLDER)) if 'rd' in f]
-            #     if len(list_files) > 0:
-            #         latest_date = sorted(list_files)[-1].split('rd')[1].split('.')[0]
-            #         print(f'\n\033[95mLatest date in buffer folder: {latest_date}\033[0m')
-            #
-            #         # download data from sftp and run pipeline from the next day, for 1 day and 1 day of forecast (n_days=1)
-            #         year, month, day = latest_date[:4], latest_date[4:6], latest_date[6:8]
-            #         year_n, month_n, day_n = increment_day(year, month, day, 1)
-            #         start_date = f'{year_n}_{month_n}_{day_n}'
-            #         end_date = f'{year_n}_{month_n}_{day_n}'
             else:
                 latest_date = None
                 print(f'\n\033[95mNo files in buffer folder\033[0m')
                 # run pipeline from the beginning, for 1 day and 1 day of forecast (n_days=1)
 
-                start_date = HISTORICAL_STARTING_DATES[country] # '2022_09_01'  # first date of data collection from JBA's sftp
+                start_date = HISTORICAL_STARTING_DATES[country]  # first date of data collection from JBA's sftp
                 end_date = HISTORICAL_STARTING_DATES[country]
 
             # download from sftp
@@ -491,7 +478,6 @@ if __name__ == "__main__":
             pipeline(start_date=start_date, end_date=end_date,
                      n_days=n_days, list_countries=[country])
 
-            # create json file with latest date
+            # create json file with the latest date
             with open(path_latest_date, 'w') as fp:
                 json.dump({'latest_date': start_date}, fp)
-
