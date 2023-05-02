@@ -31,7 +31,7 @@ from utils.tif import tifs_2_tif_depth, tif_2_array
 
 from utils.stats import array_2_stats
 
-from utils.sftp import download_data_from_sftp
+from utils.sftp import download_pipeline
 
 from utils.csv2geojson import csv2geojson
 
@@ -115,8 +115,8 @@ def process_files_include_exclude(include_str_list: list[str], exclude_str_list:
     return success, empty
 
 
-def pipeline(start_date: str = None, end_date: str = None, n_days: int = N_DAYS,
-             list_countries: list[str] = LIST_COUNTRIES):
+def process_pipeline(start_date: str = None, end_date: str = None, n_days: int = N_DAYS,
+                     list_countries: list[str] = LIST_COUNTRIES):
     """
     Pipeline to populate ARC's Flood Explorer buffer
     :param start_date:
@@ -438,7 +438,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if not args.historic:
-        pipeline(start_date=args.start_date, end_date=args.end_date, n_days=args.n_days)
+        process_pipeline(start_date=args.start_date, end_date=args.end_date, n_days=args.n_days)
     else:
         n_days = 1  # so that the pipeline does not keep forecasts from the past
         list_countries = args.list_countries
@@ -471,12 +471,12 @@ if __name__ == "__main__":
                 end_date = HISTORICAL_STARTING_DATES[country]
 
             # download from sftp
-            download_data_from_sftp(start_date=start_date, end_date=end_date, n_days=n_days,
-                                    list_countries=[country])
+            download_pipeline(start_date=start_date, end_date=end_date, n_days=n_days,
+                              list_countries=[country])
 
             # pipeline to process data
-            pipeline(start_date=start_date, end_date=end_date,
-                     n_days=n_days, list_countries=[country])
+            process_pipeline(start_date=start_date, end_date=end_date,
+                             n_days=n_days, list_countries=[country])
 
             # create json file with the latest date
             with open(path_latest_date, 'w') as fp:

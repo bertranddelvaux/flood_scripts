@@ -14,7 +14,7 @@ from utils.date import increment_day
 from utils.string_format import colorize_text
 
 @datetree
-def download_data_from_sftp(
+def download_pipeline(
         year,
         month,
         day,
