@@ -4,7 +4,7 @@ version = "0.1.0"
 description = "ARC's Flood Explorer python scripts"
 authors = ["bertranddelvaux <bertrand.delvaux@gmail.com>"]
 readme = "README.md"
-packages = [{include = "flood_scripts"}]
+#packages = [{include = "flood_scripts"}]
 
 [tool.poetry.dependencies]
 python = "^3.11"
