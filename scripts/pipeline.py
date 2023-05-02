@@ -11,10 +11,6 @@ import time
 import json
 import datetime as dt
 import argparse
-import sys
-
-# Appending the path to the root folder of the project to the system path
-sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
 
 from constants.constants import DATA_FOLDER, RASTER_FOLDER, IMPACTS_FOLDER, EVENTS_FOLDER, LIST_COUNTRIES, LIST_SUBFOLDERS_BUFFER, BUFFER_FOLDER, N_DAYS, COUNTRIES_FOLDER, HISTORICAL_STARTING_DATES
