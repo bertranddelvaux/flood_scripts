@@ -447,13 +447,30 @@ if __name__ == "__main__":
 
         # Check the latest running date ('rd' in the file) in the buffer folder
         for country in list_countries:
+            json_path = os.path.join(DATA_FOLDER, country)
+            json_file = 'latest_date.json'
             path_latest_date = os.path.join(DATA_FOLDER, country, 'latest_date.json')
 
-            if os.path.exists(path_latest_date):
-                with open(path_latest_date, 'r') as f:
-                    last_run = json.load(f)
+            json_dict = {
+                'latest_date': []
+            }
 
-                latest_date = last_run['latest_date']
+            json_dict = createJSONifNotExists(
+                json_path=json_path,
+                json_file=json_file,
+                json_dict=json_dict
+            )
+
+            if json_dict['latest_date'] == []:
+                latest_date = None
+                print(f'\n\033[95mNo files in buffer folder\033[0m')
+
+                start_date = HISTORICAL_STARTING_DATES[country]  # first date of data collection from JBA's sftp
+                end_date = HISTORICAL_STARTING_DATES[country]
+
+            else:
+
+                latest_date = json_dict['latest_date'][0]
                 print(f'\n\033[95mLatest date in buffer folder: {latest_date}\033[0m')
 
                 # download data from sftp and run pipeline from the next day, for 1 day and 1 day of forecast (n_days=1)
@@ -461,14 +478,6 @@ if __name__ == "__main__":
                 year_n, month_n, day_n = increment_day(year, month, day, 1)
                 start_date = f'{year_n}_{month_n}_{day_n}'
                 end_date = f'{year_n}_{month_n}_{day_n}'
-
-            else:
-                latest_date = None
-                print(f'\n\033[95mNo files in buffer folder\033[0m')
-                # run pipeline from the beginning, for 1 day and 1 day of forecast (n_days=1)
-
-                start_date = HISTORICAL_STARTING_DATES[country]  # first date of data collection from JBA's sftp
-                end_date = HISTORICAL_STARTING_DATES[country]
 
             # download from sftp
             download_pipeline(start_date=start_date, end_date=end_date, n_days=n_days,
@@ -478,6 +487,12 @@ if __name__ == "__main__":
             process_pipeline(start_date=start_date, end_date=end_date,
                              n_days=n_days, list_countries=[country])
 
-            # create json file with the latest date
-            with open(path_latest_date, 'w') as fp:
-                json.dump({'latest_date': start_date}, fp)
+            # update json latest date
+            json_dict['latest_date'].insert(0, end_date)
+
+            # update json last edited
+            json_dict = save_json_last_edit(
+                json_path=json_path,
+                json_file=json_file,
+                json_dict=json_dict
+            )
