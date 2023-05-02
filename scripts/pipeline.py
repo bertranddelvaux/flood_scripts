@@ -435,6 +435,7 @@ if __name__ == "__main__":
     parser.add_argument('-c', '--list_countries', help='List of countries to populate', type=str, nargs='+',
                         default=LIST_COUNTRIES)
     parser.add_argument('-hist', '--historic', help='Run historic data', action='store_true', default=False)
+    parser.add_argument('-hist_func', '--historic_function', help='Run historic data', type=str, default='download_pipeline')
     args = parser.parse_args()
 
     if not args.historic:
@@ -479,9 +480,12 @@ if __name__ == "__main__":
                 start_date = f'{year_n}_{month_n}_{day_n}'
                 end_date = f'{year_n}_{month_n}_{day_n}'
 
-            # download from sftp
-            download_pipeline(start_date=start_date, end_date=end_date, n_days=n_days,
-                              list_countries=[country])
+            if args.historic_function == 'download_pipeline':
+                # download from sftp
+                download_pipeline(start_date=start_date, end_date=end_date, n_days=n_days,
+                                  list_countries=[country])
+            else:
+                raise NotImplementedError(f'Historic function {args.historic_function} not implemented')
 
             # pipeline to process data
             process_pipeline(start_date=start_date, end_date=end_date,
