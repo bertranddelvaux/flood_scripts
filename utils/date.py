@@ -1,10 +1,5 @@
 import datetime as dt
 
-today = dt.datetime.today()
-year = f'{today.year}'
-month = f'{today.month:02d}'
-day = f'{today.day:02d}'
-
 def increment_day(year: str, month: str, day: str, n_days: int) -> tuple[str, str, str]:
     """
     Increment the input date by one day.

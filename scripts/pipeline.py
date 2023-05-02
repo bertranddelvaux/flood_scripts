@@ -7,8 +7,6 @@
 
 import os
 import shutil
-import time
-import json
 import datetime as dt
 import argparse
 
@@ -19,11 +17,11 @@ print(sys.path)
 from constants.constants import DATA_FOLDER, RASTER_FOLDER, IMPACTS_FOLDER, EVENTS_FOLDER, LIST_COUNTRIES, \
     LIST_SUBFOLDERS_BUFFER, BUFFER_FOLDER, N_DAYS, COUNTRIES_FOLDER, HISTORICAL_STARTING_DATES
 
-from utils.files import createFolderIfNotExists, createDataTreeStructure, DICT_DATA_TREE
+from utils.files import createFolderIfNotExists, createDataTreeStructure
 
-from utils.date import year, month, day, increment_day
+from utils.date import increment_day
 
-from utils.json import createJSONifNotExists, jsonFileToDict, dictToJSONFile
+from utils.json import createJSONifNotExists, jsonFileToDict
 
 from utils.event import initialize_event, set_ongoing_event, save_json_last_edit
 
@@ -82,7 +80,7 @@ def clean_buffer_impacts(year: str, month: str, day: str, list_countries: list[s
 
 def process_files_include_exclude(include_str_list: list[str], exclude_str_list: list[str], buffer_path: str,
                                   postfix: str = '_depth.tif',
-                                  n_bands: float = 211, threshold: float = 0.8) -> tuple[bool, bool]:
+                                  n_bands: int = 211, threshold: float = 0.8) -> tuple[bool, bool]:
     """
     Process files in buffer folder
     :param include_str_list:
