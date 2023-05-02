@@ -35,6 +35,8 @@ from utils.sftp import download_pipeline
 
 from utils.csv2geojson import csv2geojson
 
+from utils.string_format import colorize_text
+
 
 def clean_buffer_impacts(year: str, month: str, day: str, list_countries: list[str] = LIST_COUNTRIES,
                          n_days: int = N_DAYS) -> None:
@@ -448,55 +450,58 @@ if __name__ == "__main__":
 
         # Check the latest running date ('rd' in the file) in the buffer folder
         for country in list_countries:
-            json_path = os.path.join(DATA_FOLDER, country)
-            json_file = 'latest_date.json'
-            path_latest_date = os.path.join(DATA_FOLDER, country, 'latest_date.json')
+            try:
+                json_path = os.path.join(DATA_FOLDER, country)
+                json_file = 'latest_date.json'
+                path_latest_date = os.path.join(DATA_FOLDER, country, 'latest_date.json')
 
-            json_dict = {
-                'latest_date': []
-            }
+                json_dict = {
+                    'latest_date': []
+                }
 
-            json_dict = createJSONifNotExists(
-                json_path=json_path,
-                json_file=json_file,
-                json_dict=json_dict
-            )
+                json_dict = createJSONifNotExists(
+                    json_path=json_path,
+                    json_file=json_file,
+                    json_dict=json_dict
+                )
 
-            if json_dict['latest_date'] == []:
-                latest_date = None
-                print(f'\n\033[95mNo files in buffer folder\033[0m')
+                if json_dict['latest_date'] == []:
+                    latest_date = None
+                    print(f'\n\033[95mNo files in buffer folder\033[0m')
 
-                start_date = HISTORICAL_STARTING_DATES[country]  # first date of data collection from JBA's sftp
-                end_date = HISTORICAL_STARTING_DATES[country]
+                    start_date = HISTORICAL_STARTING_DATES[country]  # first date of data collection from JBA's sftp
+                    end_date = HISTORICAL_STARTING_DATES[country]
 
-            else:
+                else:
 
-                latest_date = json_dict['latest_date'][0]
-                print(f'\n\033[95mLatest date in buffer folder: {latest_date}\033[0m')
+                    latest_date = json_dict['latest_date'][0]
+                    print(f'\n\033[95mLatest date in buffer folder: {latest_date}\033[0m')
 
-                # download data from sftp and run pipeline from the next day, for 1 day and 1 day of forecast (n_days=1)
-                year, month, day = latest_date.split('_')
-                year_n, month_n, day_n = increment_day(year, month, day, 1)
-                start_date = f'{year_n}_{month_n}_{day_n}'
-                end_date = f'{year_n}_{month_n}_{day_n}'
+                    # download data from sftp and run pipeline from the next day, for 1 day and 1 day of forecast (n_days=1)
+                    year, month, day = latest_date.split('_')
+                    year_n, month_n, day_n = increment_day(year, month, day, 1)
+                    start_date = f'{year_n}_{month_n}_{day_n}'
+                    end_date = f'{year_n}_{month_n}_{day_n}'
 
-            if args.historic_function == 'download_pipeline':
-                # download from sftp
-                download_pipeline(start_date=start_date, end_date=end_date, n_days=n_days,
-                                  list_countries=[country])
-            else:
-                raise NotImplementedError(f'Historic function {args.historic_function} not implemented')
+                if args.historic_function == 'download_pipeline':
+                    # download from sftp
+                    download_pipeline(start_date=start_date, end_date=end_date, n_days=n_days,
+                                      list_countries=[country])
+                else:
+                    raise NotImplementedError(f'Historic function {args.historic_function} not implemented')
 
-            # pipeline to process data
-            process_pipeline(start_date=start_date, end_date=end_date,
-                             n_days=n_days, list_countries=[country])
+                # pipeline to process data
+                process_pipeline(start_date=start_date, end_date=end_date,
+                                 n_days=n_days, list_countries=[country])
 
-            # update json latest date
-            json_dict['latest_date'].insert(0, end_date)
+                # update json latest date
+                json_dict['latest_date'].insert(0, end_date)
 
-            # update json last edited
-            json_dict = save_json_last_edit(
-                json_path=json_path,
-                json_file=json_file,
-                json_dict=json_dict
-            )
+                # update json last edited
+                json_dict = save_json_last_edit(
+                    json_path=json_path,
+                    json_file=json_file,
+                    json_dict=json_dict
+                )
+            except:
+                print(f'{colorize_text("Error in historic data", "red")}')
