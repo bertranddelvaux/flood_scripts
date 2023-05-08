@@ -10,8 +10,6 @@ import shutil
 import datetime as dt
 import argparse
 
-import sys
-
 import pandas as pd
 import numpy as np
 
