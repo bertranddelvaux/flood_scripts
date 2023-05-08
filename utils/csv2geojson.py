@@ -3,8 +3,10 @@ import geopandas as gpd
 import pandas as pd
 import json
 
+from utils.geodataframe import gdf_to_geotiff
 
-def csv2geojson(csv_file, shp_file, output_file, decimals=2):
+
+def csv2geojson(csv_file, shp_file, output_file, geotiff:bool = True, decimals=2):
     """
     Convert csv to geojson
 
@@ -53,14 +55,17 @@ def csv2geojson(csv_file, shp_file, output_file, decimals=2):
 
     # Write the GeoDataFrame to a GeoJSON file
     gdf = gpd.GeoDataFrame(merged)
-    gdf.to_file(output_file, driver='GeoJSON')
+    if geotiff:
+        gdf_to_geotiff(gdf, output_file.replace('.geojson', '.tif'))
+    else:
+        gdf.to_file(output_file, driver='GeoJSON')
 
-    # compacting geojson even further, by removing blank spaces
-    with open(output_file, 'r') as f:
-        data = json.load(f)
+        # compacting geojson even further, by removing blank spaces
+        with open(output_file, 'r') as f:
+            data = json.load(f)
 
-    with open(output_file, 'w') as f:
-        f.write(json.dumps(data, separators=(',', ':')))
+        with open(output_file, 'w') as f:
+            f.write(json.dumps(data, separators=(',', ':')))
 
     return merged_adm0, merged_adm1, merged_adm2
 

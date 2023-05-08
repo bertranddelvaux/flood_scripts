@@ -176,7 +176,7 @@ def process_pipeline(start_date: str = None, end_date: str = None, n_days: int =
                     csv_file = [os.path.join(folder_path, f) for f in os.listdir(folder_path) if
                                 f'rd{year}{month}{day}' in f and f.endswith('.csv') and not f.endswith(
                                     '_processed.csv')][0]
-                    print(f'\t\tProcessing {csv_file}', end='')
+                    print(f'\t\tProcessing {csv_file} ... ', end='')
                     merged_adm0, merged_adm1, merged_adm2 = csv2geojson(
                         csv_file=csv_file,
                         shp_file=os.path.join(COUNTRIES_FOLDER, f'{country}_adm_shapefile.zip'),
@@ -371,7 +371,7 @@ def process_pipeline(start_date: str = None, end_date: str = None, n_days: int =
                                 # copy the impact file
                                 impact_files = [os.path.join(DATA_FOLDER, country, IMPACTS_FOLDER, f) for f in
                                                 os.listdir(os.path.join(DATA_FOLDER, country, IMPACTS_FOLDER)) if
-                                                f'rd{year}{month}{day}' in f and '.csv' in f or '.geojson' in f]
+                                                f'rd{year}{month}{day}' in f and '.csv' in f or '.geojson' in f or '.tif' in f]
                                 for impact_file in impact_files:
                                     shutil.copy(impact_file,
                                                 os.path.join(json_path_event, os.path.basename(impact_file)))
