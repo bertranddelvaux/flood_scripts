@@ -470,7 +470,6 @@ if __name__ == "__main__":
     parser.add_argument('-c', '--list_countries', help='List of countries to populate', type=str, nargs='+',
                         default=LIST_COUNTRIES)
     parser.add_argument('-hist', '--historic', help='Run historic data', action='store_true', default=False)
-    parser.add_argument('-hist_func', '--historic_function', help='Run historic data', type=str, default='download_pipeline')
     args = parser.parse_args()
 
     if not args.historic:
@@ -488,8 +487,14 @@ if __name__ == "__main__":
                 json_file = 'latest_date.json'
                 path_latest_date = os.path.join(DATA_FOLDER, country, 'latest_date.json')
 
+                # allow to start the historic data collection from a specific date
+                if args.start_date is not None:
+                    latest_date = [args.start_date]
+                else:
+                    latest_date = []
+
                 json_dict = {
-                    'latest_date': []
+                    'latest_date': latest_date
                 }
 
                 json_dict = createJSONifNotExists(
@@ -516,12 +521,8 @@ if __name__ == "__main__":
                     start_date = f'{year_n}_{month_n}_{day_n}'
                     end_date = f'{year_n}_{month_n}_{day_n}'
 
-                if args.historic_function == 'download_pipeline':
-                    # download from sftp
-                    download_pipeline(start_date=start_date, end_date=end_date, n_days=n_days,
-                                      list_countries=[country])
-                else:
-                    raise NotImplementedError(f'Historic function {args.historic_function} not implemented')
+                download_pipeline(start_date=start_date, end_date=end_date, n_days=n_days,
+                                  list_countries=[country])
 
                 # pipeline to process data
                 process_pipeline(start_date=start_date, end_date=end_date,
