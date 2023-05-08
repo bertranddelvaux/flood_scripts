@@ -513,7 +513,11 @@ if __name__ == "__main__":
 
                     # download data from sftp and run pipeline from the next day, for 1 day and 1 day of forecast (n_days=1)
                     year, month, day = latest_date.split('_')
-                    year_n, month_n, day_n = increment_day(year, month, day, 1)
+                    if args.start_date:
+                        inc_days = 0
+                    else:
+                        inc_days = 1
+                    year_n, month_n, day_n = increment_day(year, month, day, inc_days)
                     start_date = f'{year_n}_{month_n}_{day_n}'
                     end_date = f'{year_n}_{month_n}_{day_n}'
 
