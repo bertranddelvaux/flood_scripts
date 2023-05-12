@@ -164,7 +164,7 @@ def process_pipeline(start_date: str = None, end_date: str = None, n_days: int =
                     'total_events_country': 0,
                     'total_days_country': 0,
                     'peak_year': {},
-                    'year_by_year': []
+                    'year_by_year': {}
                 }
             )
 
@@ -224,7 +224,7 @@ def process_pipeline(start_date: str = None, end_date: str = None, n_days: int =
                                     'total_events_year': 0,
                                     'total_days_year': 0,
                                     'peak_event': {},
-                                    'event_by_event': []
+                                    'event_by_event': {}
                                 }
                             )
 
@@ -262,11 +262,21 @@ def process_pipeline(start_date: str = None, end_date: str = None, n_days: int =
 
                                     # update jsons
                                     # TODO: this is where country and year jsons are incremented
-                                    dict_country['total_events_country'] += 1
-                                    dict_country['total_days_country'] += dict_event['total_days_event']
+
+                                    # get event start date
+                                    start_date = dict_event['start_date']
 
                                     dict_year['total_events_year'] += 1
                                     dict_year['total_days_year'] += dict_event['total_days_event']
+                                    dict_year['event_by_event'][start_date] = {
+                                        'path': os.path.join(DATA_FOLDER, country, EVENTS_FOLDER, year_ongoing, month_ongoing, day_ongoing, json_file_event),
+                                        'event': dict_event
+                                    }
+
+                                    dict_country['total_events_country'] += 1
+                                    dict_country['total_days_country'] += dict_event['total_days_event']
+                                    dict_country['year_by_year'].setdefault(year_ongoing, {})
+                                    dict_country['year_by_year'][year_ongoing][start_date] = dict_year['event_by_event'][start_date]
 
                                     # TODO: pick up the biggest numbers from the ongoing event and put them in the peak event: flooded area, flooded population, losses, severity_index
 
@@ -308,6 +318,7 @@ def process_pipeline(start_date: str = None, end_date: str = None, n_days: int =
                                         json_file=json_file_event,
                                         json_dict_update={
                                             # 'ongoing': True,
+                                            'start_date': f'{year_n:04}_{month_n:02}_{day_n:02}',
                                             'total_days_event': 0,
                                             'day_by_day': [],  # TODO: add the first day
                                             # 'stats': {}, #TODO: initialize with the stats of the first day
