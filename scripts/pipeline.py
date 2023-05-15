@@ -81,7 +81,7 @@ def clean_buffer_impacts(year: str, month: str, day: str, list_countries: list[s
 
 def process_files_include_exclude(include_str_list: list[str], exclude_str_list: list[str], buffer_path: str,
                                   postfix: str = '_depth.tif',
-                                  n_bands: int = 211, threshold: float = 0.8) -> tuple[bool, bool]:
+                                  n_bands: int = 211, threshold: float = 0.8, to_epsg_3857: bool = True) -> tuple[bool, bool]:
     """
     Process files in buffer folder
     :param include_str_list:
@@ -104,7 +104,7 @@ def process_files_include_exclude(include_str_list: list[str], exclude_str_list:
 
     # process depth map
     raster_depth_file, empty = tifs_2_tif_depth(folder_path=buffer_path, tifs_list=list_files, postfix=postfix,
-                                                n_bands=n_bands, threshold=threshold)
+                                                n_bands=n_bands, threshold=threshold, to_epsg_3857=to_epsg_3857)
     success = True
 
     # remove files from temp folder
@@ -117,7 +117,7 @@ def process_files_include_exclude(include_str_list: list[str], exclude_str_list:
 
 
 def process_pipeline(start_date: str = None, end_date: str = None, n_days: int = N_DAYS,
-                     list_countries: list[str] = LIST_COUNTRIES):
+                     list_countries: list[str] = LIST_COUNTRIES, to_epsg_3857: bool = True) -> None:
     """
     Pipeline to populate ARC's Flood Explorer buffer
     :param start_date:
@@ -180,7 +180,8 @@ def process_pipeline(start_date: str = None, end_date: str = None, n_days: int =
                     merged_adm0, merged_adm1, merged_adm2 = csv2geojson(
                         csv_file=csv_file,
                         shp_file=os.path.join(COUNTRIES_FOLDER, f'{country}_adm_shapefile.zip'),
-                        output_file=csv_file.replace('.csv', '.geojson')
+                        output_file=csv_file.replace('.csv', '.geojson'),
+                        to_epsg_3857=to_epsg_3857,
                     )
                     print(f'\033[32m' + '✔' + '\033[0m')
 
@@ -201,7 +202,8 @@ def process_pipeline(start_date: str = None, end_date: str = None, n_days: int =
                             buffer_path=tmp_path,
                             postfix='_depth.tif',
                             n_bands=211,
-                            threshold=0.8
+                            threshold=0.8,
+                            to_epsg_3857=to_epsg_3857,
                         )
                         if success:
                             print(f'(\033[1mday {i_day}\033[0m)')

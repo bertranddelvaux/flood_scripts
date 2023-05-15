@@ -8,6 +8,7 @@ import copy
 import numpy as np
 
 from rasterio.warp import calculate_default_transform, reproject, Resampling
+from rasterio.crs import CRS
 
 from utils.files import get_file_stem_until_post
 
@@ -23,6 +24,39 @@ def tif_2_array(tif_file: str) -> tuple[np.ndarray, dict]:
         meta = src.meta
 
     return array, meta
+
+def reproject_tif(tif_file: str, output_file: str, to_crs: str | CRS | dict) -> None:
+    """
+    Convert a tif file to a CRS
+    :param to_crs:
+    :param tif_file:
+    :param output_file:
+    :return:
+    """
+
+    with rasterio.open(tif_file) as src:
+        transform, width, height = calculate_default_transform(src.crs, to_crs, src.width, src.height, *src.bounds)
+        kwargs = src.meta.copy()
+        kwargs.update({
+            'crs': to_crs,
+            'transform': transform,
+            'width': width,
+            'height': height
+        })
+
+        with rasterio.open(output_file, 'w', **kwargs) as dst:
+            for i in range(1, src.count + 1):
+                reproject(
+                    source=rasterio.band(src, i),
+                    destination=rasterio.band(dst, i),
+                    src_transform=src.transform,
+                    src_crs=src.crs,
+                    dst_transform=transform,
+                    dst_crs=to_crs,
+                    resampling=Resampling.bilinear
+                )
+
+    return
 
 def crop_array_tif_meta(array: np.ndarray, meta: dict) -> tuple[dict, rasterio.Affine, int, int]:
     """
@@ -59,15 +93,17 @@ def crop_array_tif_meta(array: np.ndarray, meta: dict) -> tuple[dict, rasterio.A
     return meta, transform, width, height
 
 
-def tifs_2_tif_depth(folder_path: str, tifs_list: list[str], postfix: str, post_stem: str = 'ens', threshold: float = 0.8, n_bands: int = 211, max_block_process_size: int = 1000) -> tuple[str, bool]:
+def tifs_2_tif_depth(folder_path: str, tifs_list: list[str], postfix: str, post_stem: str = 'ens', threshold: float = 0.8, n_bands: int = 211, max_block_process_size: int = 1000, to_epsg_3857: bool = True) -> tuple[str, bool]:
     """
-    Create a depth map from a list of tifs
+    Get a list of tifs and return a tif with the depth
     :param folder_path:
     :param tifs_list:
     :param postfix:
     :param post_stem:
     :param threshold:
     :param n_bands:
+    :param max_block_process_size:
+    :param to_epsg_3857:
     :return:
     """
 
@@ -192,6 +228,8 @@ def tifs_2_tif_depth(folder_path: str, tifs_list: list[str], postfix: str, post_
     if not arrays:
         print(f'\t\t\t\tAll files are empty, copying first file to output file: {tifs_list[0]}')
         shutil.copy(os.path.join(folder_path, tifs_list[0]), output_file)
+        if to_epsg_3857:
+            reproject_tif(output_file, output_file, to_crs='EPSG:3857')
         return output_file, empty
 
     # Stack the arrays into a single numpy array
@@ -272,6 +310,9 @@ def tifs_2_tif_depth(folder_path: str, tifs_list: list[str], postfix: str, post_
     with rasterio.open(output_file, 'w', **meta_ref) as dst:
         print(f'\t\t\t\tWrite the resulting raster to a new geotiff file: {output_file}')
         dst.write(ensemble_agreement, 1)
+
+    if to_epsg_3857:
+        reproject_tif(output_file, output_file, to_crs='EPSG:3857')
 
     # Return the output file name, and a boolean indicating if the array is empty
     return output_file, empty

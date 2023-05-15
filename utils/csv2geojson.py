@@ -4,9 +4,10 @@ import pandas as pd
 import json
 
 from utils.geodataframe import gdf_to_geotiff
+from utils.tif import reproject_tif
 
 
-def csv2geojson(csv_file, shp_file, output_file, geotiff:bool = True, decimals=2):
+def csv2geojson(csv_file, shp_file, output_file, geotiff:bool = True, to_epsg_3857: bool = True, decimals=2):
     """
     Convert csv to geojson
 
@@ -56,7 +57,10 @@ def csv2geojson(csv_file, shp_file, output_file, geotiff:bool = True, decimals=2
     # Write the GeoDataFrame to a GeoJSON file
     gdf = gpd.GeoDataFrame(merged)
     if geotiff:
-        gdf_to_geotiff(gdf, output_file.replace('.geojson', '.tif'))
+        output_file = output_file.replace('.geojson', '.tif')
+        gdf_to_geotiff(gdf, output_file)
+        if to_epsg_3857:
+            reproject_tif(output_file, output_file, to_crs='EPSG:3857')
     else:
         gdf.to_file(output_file, driver='GeoJSON')
 
