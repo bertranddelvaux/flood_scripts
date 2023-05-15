@@ -41,7 +41,9 @@ def reproject_tif(tif_file: str, output_file: str, to_crs: str | CRS | dict) -> 
             'crs': to_crs,
             'transform': transform,
             'width': width,
-            'height': height
+            'height': height,
+            'compress': 'lzw',
+            'tiled': True,
         })
 
         with rasterio.open(output_file, 'w', **kwargs) as dst:
