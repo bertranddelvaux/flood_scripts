@@ -12,6 +12,7 @@ def array_2_stats(array: np.ndarray, pixel_size_x_m: float, pixel_size_y_m: floa
     # calculate flooded area
     flooded_area_px = np.sum(array.astype(bool))
     flooded_area_m2 = flooded_area_px * pixel_area_m2 #TODO: recalculate with the actual pixel size!!!
+    flooded_area_km2 = flooded_area_m2 / 1000000
 
     # calculate severity indices
     severity_index_1m = np.round(np.mean(array) / 20.0, 2) # number of times a meter of water would be filled with the water from the flood, band 20 = 1m
@@ -24,7 +25,8 @@ def array_2_stats(array: np.ndarray, pixel_size_x_m: float, pixel_size_y_m: floa
         'std': np.round(np.std(array),2),
         'median': np.round(np.median(array),2),
         'flooded_area_px': int(flooded_area_px),
-        'flooded_area_m2': flooded_area_m2,
+        'flooded_area_m2': np.round(flooded_area_m2,2),
+        'flooded_area_km2': np.round(flooded_area_km2, 2),
         'severity_index_1m': severity_index_1m,
         'severity_index_median': severity_index_median,
     }
