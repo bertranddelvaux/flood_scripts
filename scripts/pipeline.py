@@ -84,7 +84,7 @@ def clean_buffer_impacts(year: str, month: str, day: str, list_countries: list[s
 
 def process_files_include_exclude(include_str_list: list[str], exclude_str_list: list[str], buffer_path: str,
                                   postfix: str = '_depth.tif',
-                                  n_bands: int = 211, threshold: float = 0.8, to_epsg_3857: bool = True) -> tuple[bool, bool]:
+                                  n_bands: int = 211, threshold: float = 0.8, to_epsg_3857: bool = True) -> tuple[bool, bool, tuple]:
     """
     Process files in buffer folder
     :param include_str_list:
@@ -425,10 +425,10 @@ def process_pipeline(start_date: str = None, end_date: str = None, n_days: int =
 
                                 # update the json event of the ongoing event
                                 dict_event['total_days_event'] += 1
-                                dict_event['max_depth_file'] = max_depth_file
+                                dict_event['max_depth_file'] = os.path.basename(max_depth_file)
                                 dict_event['day_by_day'].append({
                                     'day': dict_event['total_days_event'],
-                                    'map': depth_file,
+                                    'map': os.path.basename(depth_file),
                                     'bbox': bbox,
                                     'stats': stats,
                                     'adm0': adm0,
