@@ -70,7 +70,7 @@ def reproject_tif(tif_file: str, to_crs: str | CRS | dict) -> tuple:
     return bbox
 
 
-def reproject_geotiff(tif_file: str, max_resolution: int = 16000):
+def reproject_geotiff(tif_file: str, max_resolution: int = 16000, msg_max_resolution: str =''):
     """
     Reproject a GeoTIFF file to a maximum resolution
     :param input_path:
@@ -87,16 +87,21 @@ def reproject_geotiff(tif_file: str, max_resolution: int = 16000):
         # Calculate the target resolution
         src_transform, src_width, src_height = src.transform, src.width, src.height
         max_dimension = max(src_width, src_height)
-        target_resolution = max_dimension / max_resolution
 
-        # Calculate the target transform and dimensions
-        # dst_transform, dst_width, dst_height = calculate_default_transform(
-        #     src.crs, src.crs, src_width, src_height, *src.bounds, resolution=target_resolution
-        # )
-
-        dst_transform = rasterio.Affine(src_transform.a*target_resolution, src_transform.b, src_transform.c, src_transform.d, src_transform.e*target_resolution, src_transform.f)
-        dst_width = src_width // target_resolution
-        dst_height = src_height // target_resolution
+        if max_dimension > max_resolution:
+            if msg_max_resolution is None:
+                msg_max_resolution = 'Resolution too high, it needs to be downsized to a maximum of {max_resolution} px per dimension ... '
+                print(f'\t\t\t\033[31m{msg_max_resolution} \033[0m', end='')
+            else:
+                print(f'\033[32m' + '✔' + '\033[0m', end='')
+            target_resolution = max_dimension / max_resolution
+            dst_transform = rasterio.Affine(src_transform.a*target_resolution, src_transform.b, src_transform.c, src_transform.d, src_transform.e*target_resolution, src_transform.f)
+            dst_width = src_width // target_resolution
+            dst_height = src_height // target_resolution
+        else:
+            dst_transform = src_transform
+            dst_width = src_width
+            dst_height = src_height
 
         # Prepare the output dataset
         kwargs = src.meta.copy()
@@ -124,6 +129,8 @@ def reproject_geotiff(tif_file: str, max_resolution: int = 16000):
 
     # remove the temporary file
     os.remove(tmp_file)
+
+    return msg_max_resolution
 
 
 def crop_array_tif_meta(array: np.ndarray, meta: dict) -> tuple[dict, rasterio.Affine, int, int]:
@@ -298,9 +305,14 @@ def tifs_2_tif_depth(folder_path: str, tifs_list: list[str], postfix: str, post_
 
     # Initialize message for different resolutions
     msg_different_resolutions = None
+    msg_max_resolution = None
 
     # Read the metadata of all the tifs and store the reference metadata for the one with the highest resolution
     for tif_file in tifs_list:
+
+        # sanity check: compress and max_resolution
+        msg_max_resolution = reproject_geotiff(os.path.join(folder_path, tif_file), max_resolution=max_resolution, msg_max_resolution=msg_max_resolution)
+
         with rasterio.open(os.path.join(folder_path, tif_file)) as src:
             meta = src.meta
             crs = src.crs
@@ -337,6 +349,10 @@ def tifs_2_tif_depth(folder_path: str, tifs_list: list[str], postfix: str, post_
                         'crs': crs_ref,
                     })
 
+    # close the msg_max_resolution printing message
+    if msg_max_resolution is not None:
+        print()
+
     if meta_ref is None:
         meta_ref = copy.deepcopy(meta)
         crs_ref = copy.deepcopy(src.crs)
@@ -344,10 +360,6 @@ def tifs_2_tif_depth(folder_path: str, tifs_list: list[str], postfix: str, post_
 
     print(f'\t\t\tReference resolution: , {meta_ref["width"]}x{meta_ref["height"]}')
 
-    if meta_ref['width'] > max_resolution or meta_ref['height'] > max_resolution:
-        print(f'\t\t\t\033[31mResolution too high, it needs to be downsized to a maximum of {max_resolution} px per dimension\033[0m')
-        for tif_file in tifs_list:
-            reproject_geotiff(os.path.join(folder_path, tif_file), max_resolution=max_resolution)
 
     # Extract the pixel values from each dataset and store them in a numpy array:
     arrays = []
