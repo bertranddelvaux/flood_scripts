@@ -25,7 +25,7 @@ def tif_2_array(tif_file: str) -> tuple[np.ndarray, dict]:
 
     return array, meta
 
-def reproject_tif(tif_file: str, output_file: str, to_crs: str | CRS | dict) -> tuple:
+def reproject_tif(tif_file: str, to_crs: str | CRS | dict) -> tuple:
     """
     Convert a tif file to a CRS
     :param to_crs:
@@ -34,7 +34,11 @@ def reproject_tif(tif_file: str, output_file: str, to_crs: str | CRS | dict) -> 
     :return:
     """
 
-    with rasterio.open(tif_file) as src:
+    # copy the file to a temporary file
+    tmp_file = f'{tif_file}.tmp'
+    shutil.copyfile(tif_file, tmp_file)
+
+    with rasterio.open(tmp_file) as src:
         transform, width, height = calculate_default_transform(src.crs, to_crs, src.width, src.height, *src.bounds)
         kwargs = src.meta.copy()
         kwargs.update({
@@ -46,7 +50,7 @@ def reproject_tif(tif_file: str, output_file: str, to_crs: str | CRS | dict) -> 
             'tiled': True,
         })
 
-        with rasterio.open(output_file, 'w', **kwargs) as dst:
+        with rasterio.open(tif_file, 'w', **kwargs) as dst:
             for i in range(1, src.count + 1):
                 reproject(
                     source=rasterio.band(src, i),
@@ -58,9 +62,69 @@ def reproject_tif(tif_file: str, output_file: str, to_crs: str | CRS | dict) -> 
                     resampling=Resampling.bilinear
                 )
 
+    # remove the temporary file
+    os.remove(tmp_file)
+
     bbox = dst.bounds
 
     return bbox
+
+
+def reproject_geotiff(tif_file: str, max_resolution: int = 16000):
+    """
+    Reproject a GeoTIFF file to a maximum resolution
+    :param input_path:
+    :param output_path:
+    :param max_resolution:
+    :return:
+    """
+
+    # copy the file to a temporary file
+    tmp_file = f'{tif_file}.tmp'
+    shutil.copyfile(tif_file, tmp_file)
+
+    with rasterio.open(tmp_file) as src:
+        # Calculate the target resolution
+        src_transform, src_width, src_height = src.transform, src.width, src.height
+        max_dimension = max(src_width, src_height)
+        target_resolution = max_dimension / max_resolution
+
+        # Calculate the target transform and dimensions
+        # dst_transform, dst_width, dst_height = calculate_default_transform(
+        #     src.crs, src.crs, src_width, src_height, *src.bounds, resolution=target_resolution
+        # )
+
+        dst_transform = rasterio.Affine(src_transform.a*target_resolution, src_transform.b, src_transform.c, src_transform.d, src_transform.e*target_resolution, src_transform.f)
+        dst_width = src_width // target_resolution
+        dst_height = src_height // target_resolution
+
+        # Prepare the output dataset
+        kwargs = src.meta.copy()
+        kwargs.update({
+            'crs': src.crs,
+            'transform': dst_transform,
+            'width': dst_width,
+            'height': dst_height,
+            'compress': 'lzw',
+            'tiled': True,
+        })
+
+        # Reproject the dataset
+        with rasterio.open(tif_file, 'w', **kwargs) as dst:
+            for i in range(1, src.count + 1):
+                reproject(
+                    source=rasterio.band(src, i),
+                    destination=rasterio.band(dst, i),
+                    src_transform=src_transform,
+                    src_crs=src.crs,
+                    dst_transform=dst_transform,
+                    dst_crs=src.crs,  # Use the same CRS for the output
+                    resampling = Resampling.bilinear
+                )
+
+    # remove the temporary file
+    os.remove(tmp_file)
+
 
 def crop_array_tif_meta(array: np.ndarray, meta: dict) -> tuple[dict, rasterio.Affine, int, int]:
     """
@@ -206,7 +270,7 @@ def reproject_and_maximize_tifs(tifs_list: list[str], output_file: str, to_epsg_
 
 
 
-def tifs_2_tif_depth(folder_path: str, tifs_list: list[str], postfix: str, post_stem: str = 'ens', threshold: float = 0.8, n_bands: int = 211, max_block_process_size: int = 1000, to_epsg_3857: bool = True) -> tuple[str, bool, tuple]:
+def tifs_2_tif_depth(folder_path: str, tifs_list: list[str], postfix: str, post_stem: str = 'ens', threshold: float = 0.8, n_bands: int = 211, max_block_process_size: int = 1000, max_resolution: int = 16000, to_epsg_3857: bool = True) -> tuple[str, bool, tuple]:
     """
     Get a list of tifs and return a tif with the depth
     :param folder_path:
@@ -280,6 +344,11 @@ def tifs_2_tif_depth(folder_path: str, tifs_list: list[str], postfix: str, post_
 
     print(f'\t\t\tReference resolution: , {meta_ref["width"]}x{meta_ref["height"]}')
 
+    if meta_ref['width'] > max_resolution or meta_ref['height'] > max_resolution:
+        print(f'\t\t\t\033[31mResolution too high, it needs to be downsized to a maximum of {max_resolution} px per dimension\033[0m')
+        for tif_file in tifs_list:
+            reproject_geotiff(os.path.join(folder_path, tif_file), max_resolution=max_resolution)
+
     # Extract the pixel values from each dataset and store them in a numpy array:
     arrays = []
     for tif_file in tifs_list:
@@ -344,9 +413,14 @@ def tifs_2_tif_depth(folder_path: str, tifs_list: list[str], postfix: str, post_
     if not arrays:
         print(f'\t\t\t\tAll files are empty, copying first file to output file: {tifs_list[0]}')
         shutil.copy(os.path.join(folder_path, tifs_list[0]), output_file)
+
+        # open the file to get the bbox
+        with rasterio.open(output_file) as src:
+            bbox = src.bounds
+
         if to_epsg_3857:
-            reproject_tif(output_file, output_file, to_crs='EPSG:3857')
-        return output_file, empty
+            bbox = reproject_tif(os.path.join(folder_path, tif_file), to_crs='EPSG:3857')
+        return output_file, empty, bbox
 
     # Stack the arrays into a single numpy array
     stacked = np.stack(arrays)
@@ -430,7 +504,7 @@ def tifs_2_tif_depth(folder_path: str, tifs_list: list[str], postfix: str, post_
     bbox = dst.bounds
 
     if to_epsg_3857:
-        bbox = reproject_tif(output_file, output_file, to_crs='EPSG:3857')
+        bbox = reproject_tif(output_file, to_crs='EPSG:3857')
 
     # Return the output file name, and a boolean indicating if the array is empty
     return output_file, empty, bbox

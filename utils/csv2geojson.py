@@ -60,7 +60,7 @@ def csv2geojson(csv_file, shp_file, output_file, geotiff:bool = True, to_epsg_38
         output_file = output_file.replace('.geojson', '.tif')
         gdf_to_geotiff(gdf, output_file)
         if to_epsg_3857:
-            reproject_tif(output_file, output_file, to_crs='EPSG:3857')
+            reproject_tif(output_file, to_crs='EPSG:3857')
     else:
         gdf.to_file(output_file, driver='GeoJSON')
 
