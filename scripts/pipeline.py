@@ -274,7 +274,7 @@ def process_pipeline(start_date: str = None, end_date: str = None, n_days: int =
                                     dict_year['total_events_year'] += 1
                                     dict_year['total_days_year'] += dict_event['total_days_event']
                                     dict_year['event_by_event'][start_date] = {
-                                        'path': os.path.join(country, EVENTS_FOLDER, year_ongoing, month_ongoing, day_ongoing, json_file_event),
+                                        'path': os.path.join(DATA_FOLDER, country, EVENTS_FOLDER, year_ongoing, month_ongoing, day_ongoing, json_file_event),
                                         'event': dict_event
                                     }
 
