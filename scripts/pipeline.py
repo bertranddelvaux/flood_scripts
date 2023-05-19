@@ -386,7 +386,7 @@ def process_pipeline(start_date: str = None, end_date: str = None, n_days: int =
                                 print(f'\t\t\t\t\033[34mCopied {os.path.basename(depth_file)}... \033[0m')
 
                                 # if a file named f'{year_ongoing}_{month_ongoing}_{day_ongoing}_max_depth.tif' does not exists, copy the only depth file and rename it, if not, call reproject_and_maximize_tifs with the two files
-                                max_depth_file = os.path.join(json_path_event, f'{year_ongoing}_{month_ongoing}_{day_ongoing}_max_depth.tif')
+                                max_depth_file = os.path.join(json_path_event, f'{country}_{year_ongoing}_{month_ongoing}_{day_ongoing}_max_depth.tif')
                                 if not os.path.exists(max_depth_file):
                                     shutil.copy(depth_file, max_depth_file)
                                     bbox_max = bbox
