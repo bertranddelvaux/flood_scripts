@@ -116,7 +116,6 @@ def reproject_and_maximize_tifs(tifs_list: list[str], output_file: str, to_epsg_
             transform = src.transform
             height, width = array.shape
             #meta, transform, width, height = crop_array_tif_meta(array, meta)
-            print(f'Found bounds: {bounds}')
 
             min_x = min(min_x, bounds.left)
             min_y = min(min_y, bounds.bottom)
@@ -148,15 +147,10 @@ def reproject_and_maximize_tifs(tifs_list: list[str], output_file: str, to_epsg_
                     'height': height_ref,
                     'crs': crs_ref,
                 })
-            print(f'Updated transform is : {transform_ref}')
-            print(f'Width and Height are : {width} and {height}')
 
     # Create a bounding box with the common extent
     bbox = (min_x, min_y, max_x, max_y)
     left, bottom, right, top = transform_ref.c, transform_ref.f + transform_ref.e * height_ref, transform_ref.c + transform_ref.a * width_ref, transform_ref.f
-    print(f'Bounding box: {bbox}')
-    print(f'left, bottom, right, top: {transform_ref.c, transform_ref.f + transform_ref.e * height_ref, transform_ref.c + transform_ref.a * width_ref, transform_ref.f}')
-    print(f'Width and Height are : {width_ref} and {height_ref}')
 
     # Reprojection parameters
     if to_epsg_3857:
@@ -199,18 +193,9 @@ def reproject_and_maximize_tifs(tifs_list: list[str], output_file: str, to_epsg_
 
             # Read the reprojected data
             array_max = np.maximum(array_max, array_dst)
-            # reprojected_data = reprojected.read(1)
-            #
-            # # Stack the reprojected data into the max_values array
-            # if max_values is None:
-            #     max_values = reprojected_data
-            # else:
-            #     max_values = np.stack((max_values, reprojected_data), axis=0)
 
             reprojected.close()
 
-        # Apply np.max along the first axis to get the maximum pixel values
-        #max_values = np.apply_along_axis(np.max, axis=0, arr=max_values)
 
     # Write the output file with the maximum pixel values
     with rasterio.open(output_file, 'w', driver='GTiff', height=dst_height, width=dst_width, count=1,
