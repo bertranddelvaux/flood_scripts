@@ -24,7 +24,7 @@ from utils.json import createJSONifNotExists, jsonFileToDict
 
 from utils.event import initialize_event, set_ongoing_event, save_json_last_edit
 
-from utils.tif import tifs_2_tif_depth, tif_2_array
+from utils.tif import tifs_2_tif_depth, tif_2_array, reproject_and_maximize_tifs
 
 from utils.stats import array_2_stats
 
@@ -55,15 +55,18 @@ def clean_buffer_impacts(year: str, month: str, day: str, list_countries: list[s
         path = os.path.join(DATA_FOLDER, country, RASTER_FOLDER, BUFFER_FOLDER)
         if os.path.exists(path):
             for file in os.listdir(path):
-                # extract the 8 characters of file name after 'rd' and after 'fe'
-                rd = file.split('rd')[1][:8]
-                fe = file.split('fe')[1][:8]
+                try:
+                    # extract the 8 characters of file name after 'rd' and after 'fe'
+                    rd = file.split('rd')[1][:8]
+                    fe = file.split('fe')[1][:8]
 
-                # get the latest date to keep
-                year_last, month_last, day_last = increment_day(year, month, day, -n_days)
+                    # get the latest date to keep
+                    year_last, month_last, day_last = increment_day(year, month, day, -n_days)
 
-                if fe > rd or rd < f'{year_last}{month_last}{day_last}':
-                    os.remove(os.path.join(path, file))
+                    if fe > rd or rd < f'{year_last}{month_last}{day_last}':
+                        os.remove(os.path.join(path, file))
+                except IndexError:
+                    print(f'File {file} does not have the right format')
 
         # clean impacts folder
         path = os.path.join(DATA_FOLDER, country, IMPACTS_FOLDER)
@@ -103,7 +106,7 @@ def process_files_include_exclude(include_str_list: list[str], exclude_str_list:
         raise ValueError(f'No files found in buffer folder containing {", ".join(include_str_list)}')
 
     # process depth map
-    raster_depth_file, empty = tifs_2_tif_depth(folder_path=buffer_path, tifs_list=list_files, postfix=postfix,
+    raster_depth_file, empty, bbox = tifs_2_tif_depth(folder_path=buffer_path, tifs_list=list_files, postfix=postfix,
                                                 n_bands=n_bands, threshold=threshold, to_epsg_3857=to_epsg_3857)
     success = True
 
@@ -113,7 +116,7 @@ def process_files_include_exclude(include_str_list: list[str], exclude_str_list:
 
     print(f'\t\t\tCreated depth map: \033[32m{raster_depth_file}\033[0m ', end='')
 
-    return success, empty
+    return success, empty, bbox
 
 
 def process_pipeline(start_date: str = None, end_date: str = None, n_days: int = N_DAYS,
@@ -196,7 +199,7 @@ def process_pipeline(start_date: str = None, end_date: str = None, n_days: int =
                         print(f'\t\tProcessing \033[1mday {i_day}\033[0m : ({year_n}-{month_n}-{day_n}) ... ')
 
                         # create depth map
-                        success, empty = process_files_include_exclude(
+                        success, empty, bbox = process_files_include_exclude(
                             include_str_list=[f'fe{year_n}{month_n}{day_n}', f'rd{year}{month}{day}'],
                             exclude_str_list=['Agreement', '_depth'],
                             buffer_path=tmp_path,
@@ -374,12 +377,24 @@ def process_pipeline(start_date: str = None, end_date: str = None, n_days: int =
                                 ## Copy files
 
                                 # copy the depth file
-                                depth_file = \
+                                depth_file_buffer = \
                                     [os.path.join(DATA_FOLDER, country, RASTER_FOLDER, BUFFER_FOLDER, f) for f in
                                      os.listdir(os.path.join(DATA_FOLDER, country, RASTER_FOLDER, BUFFER_FOLDER)) if
                                      f'rd{year}{month}{day}' in f and 'depth.tif' in f][0]
-                                shutil.copy(depth_file, os.path.join(json_path_event, os.path.basename(depth_file)))
+                                depth_file = os.path.join(json_path_event, os.path.basename(depth_file_buffer))
+                                shutil.copy(depth_file_buffer, depth_file)
                                 print(f'\t\t\t\t\033[34mCopied {os.path.basename(depth_file)}... \033[0m')
+
+                                # if a file named f'{year_ongoing}_{month_ongoing}_{day_ongoing}_max_depth.tif' does not exists, copy the only depth file and rename it, if not, call reproject_and_maximize_tifs with the two files
+                                max_depth_file = os.path.join(json_path_event, f'{year_ongoing}_{month_ongoing}_{day_ongoing}_max_depth.tif')
+                                if not os.path.exists(max_depth_file):
+                                    shutil.copy(depth_file, max_depth_file)
+                                    bbox_max = bbox
+                                    print(f'\t\t\t\t\033[34mCreated {os.path.basename(max_depth_file)}... \033[0m')
+                                else:
+                                    # reproject and maximize the two raster files
+                                    bbox_max = reproject_and_maximize_tifs(tifs_list=[max_depth_file, depth_file], output_file=max_depth_file)
+                                    print(f'\t\t\t\t\033[34mUpdated {os.path.basename(max_depth_file)}... \033[0m')
 
                                 # copy the impact file
                                 impact_files = [os.path.join(DATA_FOLDER, country, IMPACTS_FOLDER, f) for f in
@@ -395,8 +410,7 @@ def process_pipeline(start_date: str = None, end_date: str = None, n_days: int =
                                 # update the json event of the ongoing event
 
                                 # open the raster file
-                                array, meta = tif_2_array(
-                                    os.path.join(json_path_event, os.path.basename(depth_file)))
+                                array, meta = tif_2_array(depth_file)
                                 # get the stats
                                 stats = array_2_stats(
                                     array=array,
@@ -411,13 +425,17 @@ def process_pipeline(start_date: str = None, end_date: str = None, n_days: int =
 
                                 # update the json event of the ongoing event
                                 dict_event['total_days_event'] += 1
+                                dict_event['max_depth_file'] = max_depth_file
                                 dict_event['day_by_day'].append({
                                     'day': dict_event['total_days_event'],
+                                    'map': depth_file,
+                                    'bbox': bbox,
                                     'stats': stats,
                                     'adm0': adm0,
                                     'adm1': adm1,
                                     'adm2': adm2,
                                 })
+                                dict_event['bbox_max'] = bbox_max
 
                                 if dict_event['total_days_event'] == 1:
                                     dict_event['peak_flood'] = {
@@ -491,64 +509,64 @@ if __name__ == "__main__":
 
         # Check the latest running date ('rd' in the file) in the buffer folder
         for country in list_countries:
-            try:
-                json_path = os.path.join(DATA_FOLDER, country)
-                json_file = 'latest_date.json'
-                path_latest_date = os.path.join(DATA_FOLDER, country, 'latest_date.json')
+            #try:
+            json_path = os.path.join(DATA_FOLDER, country)
+            json_file = 'latest_date.json'
+            path_latest_date = os.path.join(DATA_FOLDER, country, 'latest_date.json')
 
-                # allow to start the historic data collection from a specific date
-                if args.start_date is not None:
-                    latest_date = [args.start_date]
+            # allow to start the historic data collection from a specific date
+            if args.start_date is not None:
+                latest_date = [args.start_date]
+            else:
+                latest_date = []
+
+            json_dict = {
+                'latest_date': latest_date
+            }
+
+            json_dict = createJSONifNotExists(
+                json_path=json_path,
+                json_file=json_file,
+                json_dict=json_dict
+            )
+
+            if json_dict['latest_date'] == []:
+                latest_date = None
+                print(f'\n\033[95mNo files in buffer folder\033[0m')
+
+                start_date = HISTORICAL_STARTING_DATES[country]  # first date of data collection from JBA's sftp
+                end_date = HISTORICAL_STARTING_DATES[country]
+
+            else:
+
+                latest_date = json_dict['latest_date'][0]
+                print(f'\n\033[95mLatest date in buffer folder: {latest_date}\033[0m')
+
+                # download data from sftp and run pipeline from the next day, for 1 day and 1 day of forecast (n_days=1)
+                year, month, day = latest_date.split('_')
+                if args.start_date:
+                    inc_days = 0
                 else:
-                    latest_date = []
+                    inc_days = 1
+                year_n, month_n, day_n = increment_day(year, month, day, inc_days)
+                start_date = f'{year_n}_{month_n}_{day_n}'
+                end_date = f'{year_n}_{month_n}_{day_n}'
 
-                json_dict = {
-                    'latest_date': latest_date
-                }
+            download_pipeline(start_date=start_date, end_date=end_date, n_days=n_days,
+                              list_countries=[country])
 
-                json_dict = createJSONifNotExists(
-                    json_path=json_path,
-                    json_file=json_file,
-                    json_dict=json_dict
-                )
+            # pipeline to process data
+            process_pipeline(start_date=start_date, end_date=end_date,
+                             n_days=n_days, list_countries=[country])
 
-                if json_dict['latest_date'] == []:
-                    latest_date = None
-                    print(f'\n\033[95mNo files in buffer folder\033[0m')
+            # update json latest date
+            json_dict['latest_date'].insert(0, end_date)
 
-                    start_date = HISTORICAL_STARTING_DATES[country]  # first date of data collection from JBA's sftp
-                    end_date = HISTORICAL_STARTING_DATES[country]
-
-                else:
-
-                    latest_date = json_dict['latest_date'][0]
-                    print(f'\n\033[95mLatest date in buffer folder: {latest_date}\033[0m')
-
-                    # download data from sftp and run pipeline from the next day, for 1 day and 1 day of forecast (n_days=1)
-                    year, month, day = latest_date.split('_')
-                    if args.start_date:
-                        inc_days = 0
-                    else:
-                        inc_days = 1
-                    year_n, month_n, day_n = increment_day(year, month, day, inc_days)
-                    start_date = f'{year_n}_{month_n}_{day_n}'
-                    end_date = f'{year_n}_{month_n}_{day_n}'
-
-                download_pipeline(start_date=start_date, end_date=end_date, n_days=n_days,
-                                  list_countries=[country])
-
-                # pipeline to process data
-                process_pipeline(start_date=start_date, end_date=end_date,
-                                 n_days=n_days, list_countries=[country])
-
-                # update json latest date
-                json_dict['latest_date'].insert(0, end_date)
-
-                # update json last edited
-                json_dict = save_json_last_edit(
-                    json_path=json_path,
-                    json_file=json_file,
-                    json_dict=json_dict
-                )
-            except:
-                print(f'{colorize_text("Error in historic data", "red")}')
+            # update json last edited
+            json_dict = save_json_last_edit(
+                json_path=json_path,
+                json_file=json_file,
+                json_dict=json_dict
+            )
+            #except:
+            #print(f'{colorize_text("Error in historic data", "red")}')

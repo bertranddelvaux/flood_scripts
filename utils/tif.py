@@ -25,7 +25,7 @@ def tif_2_array(tif_file: str) -> tuple[np.ndarray, dict]:
 
     return array, meta
 
-def reproject_tif(tif_file: str, output_file: str, to_crs: str | CRS | dict) -> None:
+def reproject_tif(tif_file: str, output_file: str, to_crs: str | CRS | dict) -> tuple:
     """
     Convert a tif file to a CRS
     :param to_crs:
@@ -58,7 +58,9 @@ def reproject_tif(tif_file: str, output_file: str, to_crs: str | CRS | dict) -> 
                     resampling=Resampling.bilinear
                 )
 
-    return
+    bbox = dst.bounds
+
+    return bbox
 
 def crop_array_tif_meta(array: np.ndarray, meta: dict) -> tuple[dict, rasterio.Affine, int, int]:
     """
@@ -94,8 +96,132 @@ def crop_array_tif_meta(array: np.ndarray, meta: dict) -> tuple[dict, rasterio.A
 
     return meta, transform, width, height
 
+def reproject_and_maximize_tifs(tifs_list: list[str], output_file: str, to_epsg_3857: bool = True):
+    # Initialize variables to store the spatial extent
+    min_x, min_y, max_x, max_y = float('inf'), float('inf'), float('-inf'), float('-inf')
 
-def tifs_2_tif_depth(folder_path: str, tifs_list: list[str], postfix: str, post_stem: str = 'ens', threshold: float = 0.8, n_bands: int = 211, max_block_process_size: int = 1000, to_epsg_3857: bool = True) -> tuple[str, bool]:
+    # Initialize reference metadata
+    meta_ref = None
+    array_ref = None
+    transform_ref = None
+    width_ref = 0
+    height_ref = 0
+
+    # Iterate over the files to find the common extent
+    for tif_file in tifs_list:
+        with rasterio.open(tif_file) as src:
+            bounds = src.bounds
+            meta = src.meta
+            array = src.read(1)
+            transform = src.transform
+            height, width = array.shape
+            #meta, transform, width, height = crop_array_tif_meta(array, meta)
+            print(f'Found bounds: {bounds}')
+
+            min_x = min(min_x, bounds.left)
+            min_y = min(min_y, bounds.bottom)
+            max_x = max(max_x, bounds.right)
+            max_y = max(max_y, bounds.top)
+
+            dtype = src.dtypes[0]
+
+            if meta_ref is None:
+                meta_ref = copy.deepcopy(meta)
+                transform_ref = copy.deepcopy(transform)
+                crs_ref = copy.deepcopy(src.crs)
+                array_ref = np.empty((height, width), dtype=meta_ref['dtype'])
+                width_ref = width
+                height_ref = height
+            else:
+                # take the maximum extent
+                transform_ref_c = min(transform_ref.c, transform.c)
+                transform_ref_f = max(transform_ref.f, transform.f)
+                transform_ref = rasterio.Affine(transform_ref.a, transform_ref.b, transform_ref_c, transform_ref.d,
+                                                transform_ref.e, transform_ref_f)
+                width_ref = max(width_ref, width)
+                height_ref = max(height_ref, height)
+                array_ref = np.empty((height_ref, width_ref), dtype=meta_ref['dtype'])
+                # update the reference metadata
+                meta_ref.update({
+                    'transform': transform_ref,
+                    'width': width_ref,
+                    'height': height_ref,
+                    'crs': crs_ref,
+                })
+            print(f'Updated transform is : {transform_ref}')
+            print(f'Width and Height are : {width} and {height}')
+
+    # Create a bounding box with the common extent
+    bbox = (min_x, min_y, max_x, max_y)
+    left, bottom, right, top = transform_ref.c, transform_ref.f + transform_ref.e * height_ref, transform_ref.c + transform_ref.a * width_ref, transform_ref.f
+    print(f'Bounding box: {bbox}')
+    print(f'left, bottom, right, top: {transform_ref.c, transform_ref.f + transform_ref.e * height_ref, transform_ref.c + transform_ref.a * width_ref, transform_ref.f}')
+    print(f'Width and Height are : {width_ref} and {height_ref}')
+
+    # Reprojection parameters
+    if to_epsg_3857:
+        dst_crs = 'EPSG:3857'
+    else:
+        dst_crs = 'EPSG:4326'  # Specify the desired CRS
+    dst_transform, dst_width, dst_height = calculate_default_transform(src.crs, dst_crs, width_ref, height_ref, left, bottom, right, top)
+
+    # Initialize the array of max values
+    array_dst = np.empty((dst_height, dst_width), dtype=dtype)
+    array_max = np.empty((dst_height, dst_width), dtype=dtype)
+
+    # Output folder for the reprojected files
+    output_folder = ""
+
+    # Iterate over the files
+    for tif_file in tifs_list:
+        with rasterio.open(tif_file) as src:
+            # Reproject the raster to the common extent
+            reprojected = rasterio.open(
+                output_folder + output_file,
+                'w',
+                driver='GTiff',
+                height=dst_height,
+                width=dst_width,
+                count=1,
+                dtype=src.dtypes[0],
+                crs=dst_crs,
+                transform=dst_transform
+            )
+            reproject(
+                source=rasterio.band(src, 1),
+                destination=array_dst,
+                src_transform=src.transform,
+                src_crs=src.crs,
+                dst_transform=dst_transform,
+                dst_crs=dst_crs,
+                resampling=Resampling.nearest
+            )
+
+            # Read the reprojected data
+            array_max = np.maximum(array_max, array_dst)
+            # reprojected_data = reprojected.read(1)
+            #
+            # # Stack the reprojected data into the max_values array
+            # if max_values is None:
+            #     max_values = reprojected_data
+            # else:
+            #     max_values = np.stack((max_values, reprojected_data), axis=0)
+
+            reprojected.close()
+
+        # Apply np.max along the first axis to get the maximum pixel values
+        #max_values = np.apply_along_axis(np.max, axis=0, arr=max_values)
+
+    # Write the output file with the maximum pixel values
+    with rasterio.open(output_file, 'w', driver='GTiff', height=dst_height, width=dst_width, count=1,
+                       dtype=dtype, crs=dst_crs, transform=dst_transform, compress='lzw', tiled=True) as dst:
+        dst.write(array_max, 1)
+
+    return bbox
+
+
+
+def tifs_2_tif_depth(folder_path: str, tifs_list: list[str], postfix: str, post_stem: str = 'ens', threshold: float = 0.8, n_bands: int = 211, max_block_process_size: int = 1000, to_epsg_3857: bool = True) -> tuple[str, bool, tuple]:
     """
     Get a list of tifs and return a tif with the depth
     :param folder_path:
@@ -134,7 +260,10 @@ def tifs_2_tif_depth(folder_path: str, tifs_list: list[str], postfix: str, post_
 
             # check if it's empty
             if np.any(array != 0):
-                meta, transform, width, height = crop_array_tif_meta(array, meta)
+                #meta, transform, width, height = crop_array_tif_meta(array, meta)
+                transform = src.transform
+                width = src.width
+                height = src.height
 
                 if meta_ref is None:
                     meta_ref = copy.deepcopy(meta)
@@ -286,7 +415,7 @@ def tifs_2_tif_depth(folder_path: str, tifs_list: list[str], postfix: str, post_
 
         # Crop the array to the reference resolution
         #TODO: correct the following line to crop appropriately
-        meta_ref, transform, width, height = crop_array_tif_meta(ensemble_agreement, meta_ref)
+        #meta_ref, transform, width, height = crop_array_tif_meta(ensemble_agreement, meta_ref)
 
         print(f'\t\t\t\tCropping the array to the reference resolution: {width}x{height}')
 
@@ -313,8 +442,10 @@ def tifs_2_tif_depth(folder_path: str, tifs_list: list[str], postfix: str, post_
         print(f'\t\t\t\tWrite the resulting raster to a new geotiff file: {output_file}')
         dst.write(ensemble_agreement, 1)
 
+    bbox = dst.bounds
+
     if to_epsg_3857:
-        reproject_tif(output_file, output_file, to_crs='EPSG:3857')
+        bbox = reproject_tif(output_file, output_file, to_crs='EPSG:3857')
 
     # Return the output file name, and a boolean indicating if the array is empty
-    return output_file, empty
+    return output_file, empty, bbox
