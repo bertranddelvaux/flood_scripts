@@ -39,7 +39,13 @@ def reproject_tif(tif_file: str, to_crs: str | CRS | dict) -> tuple:
     shutil.copyfile(tif_file, tmp_file)
 
     with rasterio.open(tmp_file) as src:
-        transform, width, height = calculate_default_transform(src.crs, to_crs, src.width, src.height, *src.bounds)
+
+        transform_ref = src.transform
+        width_ref = src.width
+        height_ref = src.height
+        left, bottom, right, top = transform_ref.c, transform_ref.f + transform_ref.e * height_ref, transform_ref.c + transform_ref.a * width_ref, transform_ref.f
+
+        transform, width, height = calculate_default_transform(src.crs, to_crs, src.width, src.height, left, bottom, right, top)
         kwargs = src.meta.copy()
         kwargs.update({
             'crs': to_crs,
@@ -310,8 +316,9 @@ def tifs_2_tif_depth(folder_path: str, tifs_list: list[str], postfix: str, post_
     # Read the metadata of all the tifs and store the reference metadata for the one with the highest resolution
     for tif_file in tifs_list:
 
-        # sanity check: compress and max_resolution
-        msg_max_resolution = reproject_geotiff(os.path.join(folder_path, tif_file), max_resolution=max_resolution, msg_max_resolution=msg_max_resolution)
+        if len(tifs_list) > 1:
+            # sanity check: compress and max_resolution
+            msg_max_resolution = reproject_geotiff(os.path.join(folder_path, tif_file), max_resolution=max_resolution, msg_max_resolution=msg_max_resolution)
 
         with rasterio.open(os.path.join(folder_path, tif_file)) as src:
             meta = src.meta
@@ -422,8 +429,13 @@ def tifs_2_tif_depth(folder_path: str, tifs_list: list[str], postfix: str, post_
     output_file = os.path.join(folder_path, f'{stem_set.pop()}{postfix}')
 
     # if arrays is empty, copy the first ensemble file to the output file
-    if not arrays:
-        print(f'\t\t\t\tAll files are empty, copying first file to output file: {tifs_list[0]}')
+    if not arrays or len(arrays) == 1:
+        if not arrays:
+            print(f'\t\t\t\tAll files are empty, copying first file to output file: {tifs_list[0]}')
+        elif len(arrays) == 1:
+            print(f'\t\t\t\tOnly one file is not empty, copying it to output file: {tifs_list[0]}')
+            empty = False
+
         shutil.copy(os.path.join(folder_path, tifs_list[0]), output_file)
 
         # open the file to get the bbox
