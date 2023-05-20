@@ -45,7 +45,7 @@ def reproject_tif(tif_file: str, to_crs: str | CRS | dict) -> tuple:
         height_ref = src.height
         left, bottom, right, top = transform_ref.c, transform_ref.f + transform_ref.e * height_ref, transform_ref.c + transform_ref.a * width_ref, transform_ref.f
 
-        transform, width, height = calculate_default_transform(src.crs, to_crs, src.width, src.height, left, bottom, right, top)
+        transform, width, height = calculate_default_transform(src.crs, to_crs, width_ref, height_ref, left, bottom, right, top)
         kwargs = src.meta.copy()
         kwargs.update({
             'crs': to_crs,
