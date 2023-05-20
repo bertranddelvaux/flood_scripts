@@ -7,7 +7,7 @@ from utils.geodataframe import gdf_to_geotiff
 from utils.tif import reproject_tif
 
 
-def csv2geojson(csv_file, shp_file, output_file, geotiff:bool = True, to_epsg_3857: bool = True, decimals=2):
+def csv2geojson(csv_file, shp_file, output_file, geotiff:bool = False, to_epsg_3857: bool = True, decimals=2):
     """
     Convert csv to geojson
 

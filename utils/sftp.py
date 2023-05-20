@@ -22,7 +22,8 @@ def download_pipeline(
         end_date: str = None,
         n_days: int = N_DAYS,
         list_countries: list[str] = LIST_COUNTRIES,
-        exclude_str: str ='Agreement'
+        exclude_str: str ='Agreement',
+        include_str: str = '',
 ) -> None:
     """
     Download data from JBA's sftp server for a given date and a given list of countries
@@ -63,14 +64,14 @@ def download_pipeline(
                         year_n, month_n, day_n = increment_day(year, month, day, i_day)
 
                         # include string
-                        include_str = f'fe{year_n}{month_n}{day_n}'
+                        include_str_day = f'fe{year_n}{month_n}{day_n}'
 
                         # get list of files
                         list_files = [tif.filename for tif in sftp.listdir_attr(path_sftp) if
-                                      include_str in tif.filename and exclude_str not in tif.filename]
+                                      include_str_day in tif.filename and include_str in tif.filename and exclude_str not in tif.filename]
 
                         # download files to temp folder
-                        print(f'\t\t\tDownloading {len(list_files)} from the sftp server ({colorize_text(include_str, "bold")}) ... ', end='')
+                        print(f'\t\t\tDownloading {len(list_files)} from the sftp server ({colorize_text(include_str_day, "bold")}) ... ', end='')
                         try:
                             for i, file in enumerate(list_files):
                                 sftp.get(os.path.join(path_sftp, file), os.path.join(buffer_path, file))

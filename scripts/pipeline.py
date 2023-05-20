@@ -488,6 +488,83 @@ def process_pipeline(start_date: str = None, end_date: str = None, n_days: int =
     print('\t\t\tCleaning buffer...')
     clean_buffer_impacts(year, month, day, list_countries=LIST_COUNTRIES, n_days=n_days)
 
+def process_pipeline_historic(start_date: str = None, end_date: str = None,
+                     list_countries: list[str] = LIST_COUNTRIES, to_epsg_3857: bool = True) -> None:
+    """
+    Process the pipeline for historic data
+    :param start_date:
+    :param end_date:
+    :param n_days:
+    :param list_countries:
+    :param to_epsg_3857:
+    :return:
+    """
+
+    n_days = 1  # so that the pipeline does not keep forecasts from the past
+
+    for country in list_countries:
+        # try:
+        json_path = os.path.join(DATA_FOLDER, country)
+        json_file = 'latest_date.json'
+        path_latest_date = os.path.join(DATA_FOLDER, country, 'latest_date.json')
+
+        # allow to start the historic data collection from a specific date
+        if start_date is not None:
+            latest_date = [start_date]
+        else:
+            latest_date = []
+
+        json_dict = {
+            'latest_date': latest_date
+        }
+
+        json_dict = createJSONifNotExists(
+            json_path=json_path,
+            json_file=json_file,
+            json_dict=json_dict
+        )
+
+        if json_dict['latest_date'] == []:
+            latest_date = None
+            print(f'\n\033[95mNo files in buffer folder\033[0m')
+
+            start_date = HISTORICAL_STARTING_DATES[country]  # first date of data collection from JBA's sftp
+            end_date = HISTORICAL_STARTING_DATES[country]
+
+        else:
+
+            latest_date = json_dict['latest_date'][0]
+            print(f'\n\033[95mLatest date in buffer folder: {latest_date}\033[0m')
+
+            # download data from sftp and run pipeline from the next day, for 1 day and 1 day of forecast (n_days=1)
+            year, month, day = latest_date.split('_')
+            if start_date:
+                inc_days = 0
+            else:
+                inc_days = 1
+            year_n, month_n, day_n = increment_day(year, month, day, inc_days)
+            start_date = f'{year_n}_{month_n}_{day_n}'
+            end_date = f'{year_n}_{month_n}_{day_n}'
+
+        download_pipeline(start_date=start_date, end_date=end_date, n_days=n_days,
+                          list_countries=[country])
+
+        # pipeline to process data
+        process_pipeline(start_date=start_date, end_date=end_date,
+                         n_days=n_days, list_countries=[country])
+
+        # update json latest date
+        json_dict['latest_date'].insert(0, end_date)
+
+        # update json last edited
+        json_dict = save_json_last_edit(
+            json_path=json_path,
+            json_file=json_file,
+            json_dict=json_dict
+        )
+        # except:
+        # print(f'{colorize_text("Error in historic data", "red")}')
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Populate the buffer folder with the latest data from JBA\'s server')
@@ -497,76 +574,21 @@ if __name__ == "__main__":
     parser.add_argument('-c', '--list_countries', help='List of countries to populate', type=str, nargs='+',
                         default=LIST_COUNTRIES)
     parser.add_argument('-hist', '--historic', help='Run historic data', action='store_true', default=False)
+    parser.add_argument('-to_now', '--to_now', help='Run historic data to now', action='store_true', default=False)
     args = parser.parse_args()
 
     if not args.historic:
-        process_pipeline(start_date=args.start_date, end_date=args.end_date, n_days=args.n_days)
+        process_pipeline(start_date=args.start_date, end_date=args.end_date, n_days=args.n_days, list_countries=args.list_countries)
     else:
-        n_days = 1  # so that the pipeline does not keep forecasts from the past
-        list_countries = args.list_countries
-        start_date = args.start_date
-        end_date = args.end_date
+        if args.to_now:
+            # calculate the number of days to run the historic data to now
+            today = dt.datetime.now()
+            start_date = dt.datetime.strptime(args.start_date, '%Y_%m_%d')
+            n_days_to_run = (today - start_date).days
+        else:
+            n_days_to_run = 1
 
-        # Check the latest running date ('rd' in the file) in the buffer folder
-        for country in list_countries:
-            #try:
-            json_path = os.path.join(DATA_FOLDER, country)
-            json_file = 'latest_date.json'
-            path_latest_date = os.path.join(DATA_FOLDER, country, 'latest_date.json')
+        process_pipeline_historic(start_date=args.start_date, end_date=args.end_date, list_countries=args.list_countries)
 
-            # allow to start the historic data collection from a specific date
-            if args.start_date is not None:
-                latest_date = [args.start_date]
-            else:
-                latest_date = []
-
-            json_dict = {
-                'latest_date': latest_date
-            }
-
-            json_dict = createJSONifNotExists(
-                json_path=json_path,
-                json_file=json_file,
-                json_dict=json_dict
-            )
-
-            if json_dict['latest_date'] == []:
-                latest_date = None
-                print(f'\n\033[95mNo files in buffer folder\033[0m')
-
-                start_date = HISTORICAL_STARTING_DATES[country]  # first date of data collection from JBA's sftp
-                end_date = HISTORICAL_STARTING_DATES[country]
-
-            else:
-
-                latest_date = json_dict['latest_date'][0]
-                print(f'\n\033[95mLatest date in buffer folder: {latest_date}\033[0m')
-
-                # download data from sftp and run pipeline from the next day, for 1 day and 1 day of forecast (n_days=1)
-                year, month, day = latest_date.split('_')
-                if args.start_date:
-                    inc_days = 0
-                else:
-                    inc_days = 1
-                year_n, month_n, day_n = increment_day(year, month, day, inc_days)
-                start_date = f'{year_n}_{month_n}_{day_n}'
-                end_date = f'{year_n}_{month_n}_{day_n}'
-
-            download_pipeline(start_date=start_date, end_date=end_date, n_days=n_days,
-                              list_countries=[country])
-
-            # pipeline to process data
-            process_pipeline(start_date=start_date, end_date=end_date,
-                             n_days=n_days, list_countries=[country])
-
-            # update json latest date
-            json_dict['latest_date'].insert(0, end_date)
-
-            # update json last edited
-            json_dict = save_json_last_edit(
-                json_path=json_path,
-                json_file=json_file,
-                json_dict=json_dict
-            )
-            #except:
-            #print(f'{colorize_text("Error in historic data", "red")}')
+        for i in range(n_days_to_run-1):
+            process_pipeline_historic(list_countries=args.list_countries)
