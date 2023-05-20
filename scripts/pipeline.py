@@ -397,6 +397,7 @@ def process_pipeline(start_date: str = None, end_date: str = None, n_days: int =
                                         bbox_max = reproject_and_maximize_tifs(tifs_list=[max_depth_file, depth_file], output_file=max_depth_file)
                                         print(f'\t\t\t\t\033[34mUpdated {os.path.basename(max_depth_file)}... \033[0m')
                                     except:
+                                        bbox_max = bbox
                                         print(f'\t\t\t\t\033[31mError in updating {os.path.basename(max_depth_file)}... \033[0m')
 
                                 # copy the impact file
