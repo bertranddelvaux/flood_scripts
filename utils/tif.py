@@ -194,11 +194,6 @@ def reproject_and_maximize_tifs(tifs_list: list[str], output_file: str, to_epsg_
             height, width = array.shape
             #meta, transform, width, height = crop_array_tif_meta(array, meta)
 
-            # min_x = min(min_x, bounds.left)
-            # min_y = min(min_y, bounds.bottom)
-            # max_x = max(max_x, bounds.right)
-            # max_y = max(max_y, bounds.top)
-
             min_x = min(min_x, transform.c)
             min_y = min(min_y, transform.f + transform.e * height)
             max_x = max(max_x, transform.c + transform.a * width)
