@@ -194,10 +194,15 @@ def reproject_and_maximize_tifs(tifs_list: list[str], output_file: str, to_epsg_
             height, width = array.shape
             #meta, transform, width, height = crop_array_tif_meta(array, meta)
 
-            min_x = min(min_x, bounds.left)
-            min_y = min(min_y, bounds.bottom)
-            max_x = max(max_x, bounds.right)
-            max_y = max(max_y, bounds.top)
+            # min_x = min(min_x, bounds.left)
+            # min_y = min(min_y, bounds.bottom)
+            # max_x = max(max_x, bounds.right)
+            # max_y = max(max_y, bounds.top)
+
+            min_x = min(min_x, transform.c)
+            min_y = min(min_y, transform.f + transform.e * height)
+            max_x = max(max_x, transform.c + transform.a * width)
+            max_y = max(max_y, transform.f)
 
             dtype = src.dtypes[0]
 
@@ -443,7 +448,7 @@ def tifs_2_tif_depth(folder_path: str, tifs_list: list[str], postfix: str, post_
             bbox = src.bounds
 
         if to_epsg_3857:
-            bbox = reproject_tif(os.path.join(folder_path, tif_file), to_crs='EPSG:3857')
+            bbox = reproject_tif(output_file, to_crs='EPSG:3857')
         return output_file, empty, bbox
 
     # Stack the arrays into a single numpy array
