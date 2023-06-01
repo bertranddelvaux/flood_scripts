@@ -551,7 +551,7 @@ def process_pipeline_historic(start_date: str = None, end_date: str = None,
             end_date = f'{year_n}_{month_n}_{day_n}'
 
         download_pipeline(start_date=start_date, end_date=end_date, n_days=n_days,
-                          list_countries=[country], include_str='ens00')  #TODO: according to JBA, the first day of forecast, all ensembles are the same
+                          list_countries=[country], include_str='ens00')  # according to JBA, the first day of forecast, all ensembles are the same
 
         # pipeline to process data
         process_pipeline(start_date=start_date, end_date=end_date,
