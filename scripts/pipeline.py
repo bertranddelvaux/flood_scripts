@@ -24,7 +24,7 @@ from utils.json import createJSONifNotExists, jsonFileToDict
 
 from utils.event import initialize_event, set_ongoing_event, save_json_last_edit
 
-from utils.tif import tifs_2_tif_depth, tif_2_array, reproject_and_maximize_tifs
+from utils.tif import tifs_2_tif_depth, tif_2_array, reproject_and_maximize_tifs, merge_tifs
 
 from utils.stats import array_2_stats
 
@@ -393,7 +393,8 @@ def process_pipeline(start_date: str = None, end_date: str = None, n_days: int =
                                     print(f'\t\t\t\t\033[34mCreated {os.path.basename(max_depth_file)}... \033[0m')
                                 else:
                                     # reproject and maximize the two raster files
-                                    bbox_max = reproject_and_maximize_tifs(tifs_list=[max_depth_file, depth_file], output_file=max_depth_file)
+                                    #bbox_max = reproject_and_maximize_tifs(tifs_list=[max_depth_file, depth_file], output_file=max_depth_file)
+                                    bbox_max = merge_tifs(tifs_list=[max_depth_file, depth_file], output_file=max_depth_file)
                                     print(f'\t\t\t\t\033[34mUpdated {os.path.basename(max_depth_file)}... \033[0m')
 
                                 # copy the impact file

@@ -8,6 +8,8 @@ import copy
 import numpy as np
 
 from rasterio.warp import calculate_default_transform, reproject, Resampling
+from rasterio.windows import Window
+from rasterio.transform import from_bounds
 from rasterio.crs import CRS
 
 from utils.files import get_file_stem_until_post
@@ -75,6 +77,65 @@ def reproject_tif(tif_file: str, to_crs: str | CRS | dict) -> tuple:
 
     return bbox
 
+
+def reproject_tif_resolution(tif_file, target_resolution):
+
+    # copy the file to a temporary file
+    tmp_file = f'{tif_file}.tmp'
+    shutil.copyfile(tif_file, tmp_file)
+
+    with rasterio.open(tmp_file) as src:
+        # Retrieve metadata from the source file
+        src_crs = src.crs
+        src_transform = src.transform
+        src_width = src.width
+        src_height = src.height
+        src_bounds = src.bounds
+
+        # Calculate the target transform and dimensions
+        target_transform, target_width, target_height = calculate_default_transform(
+            src_crs, src_crs, src_width, src_height, *src_bounds, resolution=target_resolution
+        )
+
+        # Create the output dataset
+        kwargs = src.meta.copy()
+        kwargs.update(
+            {
+                'crs': src_crs,
+                'transform': target_transform,
+                'width': target_width,
+                'height': target_height,
+                'compress': 'lzw',
+                'tiled': True,
+            }
+        )
+
+        # with rasterio.open(tif_file, 'w', **kwargs) as dst:
+        #     # Reproject the source dataset to the target resolution
+        #     reproject(
+        #         source=source,
+        #         destination=rasterio.band(dst, 1),
+        #         src_transform=src_transform,
+        #         src_crs=src_crs,
+        #         dst_transform=target_transform,
+        #         dst_crs=src_crs,  # Use the same CRS as the source
+        #         resampling=Resampling.bilinear  # Choose a resampling method
+        #         )
+
+        with rasterio.open(tif_file, 'w', **kwargs) as dst:
+            for i in range(1, src.count + 1):
+                reproject(
+                    source=rasterio.band(src, i),
+                    destination=rasterio.band(dst, i),
+                    src_transform=src.transform,
+                    src_crs=src.crs,
+                    dst_transform=target_transform,
+                    dst_crs=src_crs,
+                    resampling=Resampling.bilinear
+                )
+
+        # remove the temporary file
+        os.remove(tmp_file)
 
 def reproject_geotiff(tif_file: str, max_resolution: int = 16000, msg_max_resolution: str =''):
     """
@@ -172,6 +233,208 @@ def crop_array_tif_meta(array: np.ndarray, meta: dict) -> tuple[dict, rasterio.A
     })
 
     return meta, transform, width, height
+
+def merge_tifs(tifs_list, output_file, to_epsg_3857=True):
+    # Read the first GeoTiff to get the resolution and spatial extent
+    with rasterio.open(tifs_list[0]) as src:
+        res = src.res
+        bounds = src.bounds
+        dtype = src.dtypes[0]
+
+    # Find the highest resolution and spatial extent that covers both GeoTiffs
+    for tif in tifs_list[1:]:
+        with rasterio.open(tif) as src_temp:
+            print(f'Found GeoTiff {tif} with resolution {src_temp.res} and spatial extent {src_temp.bounds}')
+            res = tuple(min(r, s) for r, s in zip(res, src_temp.res))
+
+    for tif in tifs_list:
+        with rasterio.open(tif) as src:
+            # if resolution is not the highest resolution, reproject the GeoTiffs to the highest resolution
+            if any(r > s for r, s in zip(src.res, res)):
+                print(f'Reprojecting GeoTiff {tif} from resolution {src.res} to resolution {res}')
+                reproject_tif_resolution(tif, target_resolution=res)
+
+    # Get spatial extent of all GeoTiffs
+    bounds = (
+        float('inf'),float('inf'),float('-inf'),float('-inf')
+    )
+    for tif in tifs_list:
+        with rasterio.open(tif) as src_temp:
+            bounds = (
+                min(bounds[0], src_temp.bounds[0]),
+                min(bounds[1], src_temp.bounds[1]),
+                max(bounds[2], src_temp.bounds[2]),
+                max(bounds[3], src_temp.bounds[3])
+            )
+
+    print(f'Using resolution {res} and spatial extent {bounds}')
+
+    # dst_shape as the max extent
+    dst_shape = (int(np.round((bounds[3] - bounds[1]) / res[1])), int(np.round((bounds[2] - bounds[0]) / res[0])))
+    transform = rasterio.transform.from_bounds(*bounds, dst_shape[1], dst_shape[0])
+
+    # Initialize the destination arrays
+    array_dst = np.zeros(dst_shape, dtype=dtype)
+    array_max = np.zeros(dst_shape, dtype=dtype)
+
+    # Process each GeoTiff
+    for tif in tifs_list:
+        with rasterio.open(tif) as src:
+            array = src.read(1)
+
+            # Calculate the spatial intersection
+            #window_float = rasterio.windows.from_bounds(*src.bounds, transform=transform)
+
+            # Rounding then casting to int to avoid rasterio error
+            #window = rasterio.windows.Window(int(np.round(window_float.col_off)), int(np.round(window_float.row_off)), int(np.round(window_float.width)), int(np.round(window_float.height)))
+
+            window = Window(
+                col_off = int(np.round((src.bounds.left - bounds[0]) / res[0])),
+                row_off = int(np.round((bounds[3] - src.bounds.top) / res[1])),
+                width = src.width,
+                height = src.height
+            )
+
+            # "Place" the array inside the destination array
+            array_dst[window.row_off:window.row_off+window.height, window.col_off:window.col_off+window.width] = array
+
+            # Take the maximum of each pixel
+            array_max = np.maximum(array_max, array_dst)
+
+    # Write the output GeoTiff
+    with rasterio.open(tifs_list[1]) as src:
+        # update profile
+        profile = {
+            'driver': 'GTiff',
+            'dtype': dtype,
+            'nodata': 0,
+            'width': dst_shape[1],
+            'height': dst_shape[0],
+            'count': 1,
+            'crs': {'init': 'EPSG:3857'},
+            'transform': rasterio.transform.from_bounds(*bounds, width=dst_shape[1], height=dst_shape[0]),
+            'compress': 'lzw',
+            'tiled': True,
+        }
+        with rasterio.open(output_file, 'w', **profile) as dst:
+            dst.write(array_max, 1)
+
+    # Return the output spatial extent
+    return bounds
+
+def reproject_and_maximize_geotiffs(tifs_list: list[str], output_file: str, to_epsg_3857: bool = True):
+    # Open the GeoTIFF files and read their metadata
+    datasets = []
+    for path in tifs_list:
+        dataset = rasterio.open(path)
+        datasets.append(dataset)
+
+    src_crs = datasets[0].crs
+    dtype = datasets[0].dtypes[0]
+    src_transform = datasets[0].transform
+
+    # Calculate the minimum bounding area
+    min_left = min(dataset.bounds.left for dataset in datasets)
+    min_bottom = min(dataset.bounds.bottom for dataset in datasets)
+    max_right = max(dataset.bounds.right for dataset in datasets)
+    max_top = max(dataset.bounds.top for dataset in datasets)
+
+    # Calculate minimum pixel size
+    min_pixel_size = min(dataset.res[0] for dataset in datasets)
+
+    # Calculate the size of the output array
+    dst_width = int((max_right - min_left) / min_pixel_size)
+    dst_height = int((max_top - min_bottom) / min_pixel_size)
+
+    # Initialize the array of max values
+    array_dst = np.empty((dst_height, dst_width), dtype=dtype)
+    array_max = np.empty((dst_height, dst_width), dtype=dtype)
+
+    # Create an empty array to store the reprojected data
+    #dst_data = np.zeros((1, dst_height, dst_width), dtype=dtype)
+
+    # Reproject each GeoTIFF onto the minimum covering area
+    for i, dataset in enumerate(datasets):
+        src_data = dataset.read(1)
+
+        # # Calculate the transform for the minimum bounding area
+        # dst_transform, dst_width, dst_height = calculate_default_transform(
+        #     src_crs,
+        #     src_crs,
+        #     # dst_width=dst_width,
+        #     # dst_height=dst_height,
+        #     width=dataset.width,
+        #     height=dataset.height,
+        #     left=dataset.bounds.left, bottom=dataset.bounds.bottom, right=dataset.bounds.right, top=dataset.bounds.top,
+        #     resolution=min_pixel_size
+        # )
+
+        # # Calculate the transform for the minimum bounding area
+        # dst_transform, _, _ = calculate_default_transform(
+        #     src_crs,
+        #     src_crs,
+        #     dst_width,
+        #     dst_height,
+        #     min_left,
+        #     min_bottom,
+        #     max_right,
+        #     max_top
+        # )
+
+        src_width = dataset.width
+        src_height = dataset.height
+
+        dst_transform = dataset.transform.scale((src_width / dst_width), (src_height / dst_height))
+
+        reproject(src_data, array_dst, src_transform=dataset.transform, src_crs=dataset.crs,
+                  dst_transform=dst_transform, dst_crs=dataset.crs,
+                  resampling=Resampling.nearest)
+
+        # Create the output GeoTIFF file
+        profile = {
+            'driver': 'GTiff',
+            'dtype': rasterio.uint8,
+            'nodata': 0,
+            'width': dst_width,
+            'height': dst_height,
+            'count': 1,
+            'crs': src_crs,
+            'transform': dst_transform,
+            'compress': 'lzw',
+            'tiled': True,
+        }
+
+        with rasterio.open(output_file.replace('.tif',f'_test_{i}.tif'), 'w', **profile) as dst:
+            dst.write(array_dst, 1)
+
+        # Read the reprojected data
+        array_max = np.maximum(array_max, array_dst)
+
+    # Calculate the maximum value for each pixel
+    #max_data = np.max(dst_data, axis=0)
+
+    # Create the output GeoTIFF file
+    profile = {
+        'driver': 'GTiff',
+        'dtype': rasterio.uint8,
+        'nodata': 0,
+        'width': dst_width,
+        'height': dst_height,
+        'count': 1,
+        'crs': src_crs,
+        'transform': dst_transform,
+        'compress': 'lzw',
+        'tiled': True,
+    }
+
+    with rasterio.open(output_file, 'w', **profile) as dst:
+        dst.write(array_max, 1)
+
+    # Close all datasets
+    for dataset in datasets:
+        dataset.close()
+
+    return (min_left, min_bottom, max_right, max_top)
 
 def reproject_and_maximize_tifs(tifs_list: list[str], output_file: str, to_epsg_3857: bool = True):
     # Initialize variables to store the spatial extent
