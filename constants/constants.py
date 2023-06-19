@@ -36,7 +36,7 @@ COUNTRIES_FOLDER = 'countries'
 
 # Historical starting dates
 HISTORICAL_STARTING_DATES = {
-    'civ': '2022_05_19',
+    'civ': '2022_08_18',
     'mdg': '2022_07_05',
     'moz': '2022_04_28',
     'mwi': '2022_07_05',
