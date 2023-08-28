@@ -45,3 +45,6 @@ HISTORICAL_STARTING_DATES = {
 
 # TIF resolution
 TIF_RESOLUTION = 0.00027777777999999997
+
+# GeoServer constants
+GEOSERVER_WORKSPACE = 'flood_foresight'

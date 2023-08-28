@@ -16,6 +16,8 @@ import numpy as np
 from constants.constants import DATA_FOLDER, RASTER_FOLDER, IMPACTS_FOLDER, EVENTS_FOLDER, LIST_COUNTRIES, \
     LIST_SUBFOLDERS_BUFFER, BUFFER_FOLDER, N_DAYS, COUNTRIES_FOLDER, HISTORICAL_STARTING_DATES
 
+from geoserver.interface import uploadToGeoserver, deleteFromGeoserver
+
 from utils.files import createFolderIfNotExists, createDataTreeStructure
 
 from utils.date import increment_day
@@ -37,8 +39,17 @@ from utils.string_format import colorize_text
 from utils.dataframe import sum_list_dict
 
 
-def clean_buffer_impacts(year: str, month: str, day: str, list_countries: list[str] = LIST_COUNTRIES,
-                         n_days: int = N_DAYS) -> None:
+def clean_buffer_impacts(
+        year: str,
+        month: str,
+        day: str,
+        list_countries: list[str] = LIST_COUNTRIES,
+        n_days: int = N_DAYS,
+        geoserver: bool = False,
+        username: str = None,
+        password: str = None,
+        server: str = None,
+) -> None:
     """
     Remove past files which are not day 0, i.e. depth maps whose file name rdYYYYMMDD and feYYYYMMDD are different
     :param year:
@@ -65,6 +76,16 @@ def clean_buffer_impacts(year: str, month: str, day: str, list_countries: list[s
 
                     if fe > rd or rd < f'{year_last}{month_last}{day_last}':
                         os.remove(os.path.join(path, file))
+                        if geoserver:
+                            #TODO: remove file from geoserver
+                            delete_success = deleteFromGeoserver(
+                                filename=os.path.join(path, file),
+                                username=username,
+                                password=password,
+                                server=server,
+                            )
+                            if delete_success:
+                                print(f'\t\t\tRemoved {file} from geoserver')
                 except IndexError:
                     print(f'File {file} does not have the right format')
 
@@ -82,9 +103,19 @@ def clean_buffer_impacts(year: str, month: str, day: str, list_countries: list[s
                     os.remove(os.path.join(path, file))
 
 
-def process_files_include_exclude(include_str_list: list[str], exclude_str_list: list[str], buffer_path: str,
-                                  postfix: str = '_depth.tif',
-                                  n_bands: int = 211, threshold: float = 0.8, to_epsg_3857: bool = True) -> tuple[bool, bool, tuple]:
+def process_files_include_exclude(
+        include_str_list: list[str],
+        exclude_str_list: list[str],
+        buffer_path: str,
+        postfix: str = '_depth.tif',
+        n_bands: int = 211,
+        threshold: float = 0.8,
+        to_epsg_3857: bool = True,
+        geoserver: bool = False,
+        username: str = None,
+        password: str = None,
+        server: str = None,
+) -> tuple[bool, bool, tuple]:
     """
     Process files in buffer folder
     :param include_str_list:
@@ -108,19 +139,38 @@ def process_files_include_exclude(include_str_list: list[str], exclude_str_list:
     # process depth map
     raster_depth_file, empty, bbox = tifs_2_tif_depth(folder_path=buffer_path, tifs_list=list_files, postfix=postfix,
                                                 n_bands=n_bands, threshold=threshold, to_epsg_3857=to_epsg_3857)
+
     success = True
 
     # remove files from temp folder
     for file in list_files:
         os.remove(os.path.join(buffer_path, file))
 
-    print(f'\t\t\tCreated depth map: \033[32m{raster_depth_file}\033[0m ', end='')
+    # upload to geoserver
+    if geoserver:
+        upload_success = uploadToGeoserver(
+            path_file=raster_depth_file,
+            username=username,
+            password=password,
+            server=server
+        )
+
+    print(f'\t\t\tCreated depth map{" (uploaded to geoserver)" if geoserver and upload_success else ""}: \033[32m{raster_depth_file}\033[0m ', end='')
 
     return success, empty, bbox
 
 
-def process_pipeline(start_date: str = None, end_date: str = None, n_days: int = N_DAYS,
-                     list_countries: list[str] = LIST_COUNTRIES, to_epsg_3857: bool = True) -> None:
+def process_pipeline(
+        start_date: str = None,
+        end_date: str = None,
+        n_days: int = N_DAYS,
+        list_countries: list[str] = LIST_COUNTRIES,
+        to_epsg_3857: bool = True,
+        geoserver: bool = False,
+        username: str = None,
+        password: str = None,
+        server: str = None,
+) -> None:
     """
     Pipeline to populate ARC's Flood Explorer buffer
     :param start_date:
@@ -207,6 +257,10 @@ def process_pipeline(start_date: str = None, end_date: str = None, n_days: int =
                             n_bands=211,
                             threshold=0.8,
                             to_epsg_3857=to_epsg_3857,
+                            geoserver=geoserver,
+                            username=username,
+                            password=password,
+                            server=server,
                         )
                         if success:
                             print(f'(\033[1mday {i_day}\033[0m)')
@@ -489,8 +543,16 @@ def process_pipeline(start_date: str = None, end_date: str = None, n_days: int =
     print('\t\t\tCleaning buffer...')
     clean_buffer_impacts(year, month, day, list_countries=LIST_COUNTRIES, n_days=n_days)
 
-def process_pipeline_historic(start_date: str = None, end_date: str = None,
-                     list_countries: list[str] = LIST_COUNTRIES, to_epsg_3857: bool = True) -> None:
+def process_pipeline_historic(
+        start_date: str = None,
+        end_date: str = None,
+        list_countries: list[str] = LIST_COUNTRIES,
+        to_epsg_3857: bool = True,
+        geoserver: bool = False,
+        username: str = None,
+        password: str = None,
+        server: str = None,
+) -> None:
     """
     Process the pipeline for historic data
     :param start_date:
@@ -551,8 +613,16 @@ def process_pipeline_historic(start_date: str = None, end_date: str = None,
                           list_countries=[country], include_str='ens00')  # according to JBA, the first day of forecast, all ensembles are the same
 
         # pipeline to process data
-        process_pipeline(start_date=start_date, end_date=end_date,
-                         n_days=n_days, list_countries=[country])
+        process_pipeline(
+            start_date=start_date,
+            end_date=end_date,
+            n_days=n_days,
+            list_countries=[country],
+            geoserver=geoserver,
+            username=username,
+            password=password,
+            server=server
+        )
 
         # update json latest date
         json_dict['latest_date'].insert(0, end_date)
@@ -576,10 +646,37 @@ if __name__ == "__main__":
                         default=LIST_COUNTRIES)
     parser.add_argument('-hist', '--historic', help='Run historic data', action='store_true', default=False)
     parser.add_argument('-to_now', '--to_now', help='Run historic data to now', action='store_true', default=False)
+    parser.add_argument('-g', '--geoserver', help='Update geoserver', action='store_true', default=False)
+    parser.add_argument('-u', '--username', help='Geoserver username', type=str, default=None)
+    parser.add_argument('-p', '--password', help='Geoserver password', type=str, default=None)
+    parser.add_argument('-server', '--server', help='Geoserver server', type=str, default='http://localhost:8080/geoserver/')
     args = parser.parse_args()
 
+    username = args.username
+    password = args.password
+    server = args.server
+
+    if args.geoserver:
+        if args.username is None:
+            username = os.environ.get('GEOSERVER_USERNAME')
+            if username is None:
+                raise Exception('Geoserver username not provided')
+        if args.password is None:
+            password = os.environ.get('GEOSERVER_PASSWORD')
+            if password is None:
+                raise Exception('Geoserver password not provided')
+
     if not args.historic:
-        process_pipeline(start_date=args.start_date, end_date=args.end_date, n_days=args.n_days, list_countries=args.list_countries)
+        process_pipeline(
+            start_date=args.start_date,
+            end_date=args.end_date,
+            n_days=args.n_days,
+            list_countries=args.list_countries,
+            geoserver=args.geoserver,
+            username=username,
+            password=password,
+            server=server
+        )
     else:
         if args.to_now:
             # calculate the number of days to run the historic data to now
@@ -589,7 +686,21 @@ if __name__ == "__main__":
         else:
             n_days_to_run = 1
 
-        process_pipeline_historic(start_date=args.start_date, end_date=args.end_date, list_countries=args.list_countries)
+        process_pipeline_historic(
+            start_date=args.start_date,
+            end_date=args.end_date,
+            list_countries=args.list_countries,
+            geoserver=args.geoserver,
+            username=username,
+            password=password,
+            server=server
+        )
 
         for i in range(n_days_to_run-1):
-            process_pipeline_historic(list_countries=args.list_countries)
+            process_pipeline_historic(
+                list_countries=args.list_countries,
+                geoserver=args.geoserver,
+                username=username,
+                password=password,
+                server=server
+            )
