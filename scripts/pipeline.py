@@ -19,23 +19,14 @@ from constants.constants import DATA_FOLDER, RASTER_FOLDER, IMPACTS_FOLDER, EVEN
 from geoserver.interface import uploadToGeoserver, deleteFromGeoserver
 
 from utils.files import createFolderIfNotExists, createDataTreeStructure
-
 from utils.date import increment_day
-
 from utils.json import createJSONifNotExists, jsonFileToDict
-
 from utils.event import initialize_event, set_ongoing_event, save_json_last_edit
-
 from utils.tif import tifs_2_tif_depth, tif_2_array, reproject_and_maximize_tifs, merge_tifs
-
 from utils.stats import array_2_stats
-
 from utils.sftp import download_pipeline
-
 from utils.csv2geojson import csv2geojson
-
 from utils.string_format import colorize_text
-
 from utils.dataframe import sum_list_dict
 
 
@@ -137,8 +128,14 @@ def process_files_include_exclude(
         raise ValueError(f'No files found in buffer folder containing {", ".join(include_str_list)}')
 
     # process depth map
-    raster_depth_file, empty, bbox = tifs_2_tif_depth(folder_path=buffer_path, tifs_list=list_files, postfix=postfix,
-                                                n_bands=n_bands, threshold=threshold, to_epsg_3857=to_epsg_3857)
+    raster_depth_file, empty, bbox = tifs_2_tif_depth(
+        folder_path=buffer_path,
+        tifs_list=list_files,
+        postfix=postfix,
+        n_bands=n_bands,
+        threshold=threshold,
+        to_epsg_3857=to_epsg_3857
+    )
 
     success = True
 
@@ -147,6 +144,7 @@ def process_files_include_exclude(
         os.remove(os.path.join(buffer_path, file))
 
     # upload to geoserver
+    upload_success = False
     if geoserver:
         upload_success = uploadToGeoserver(
             path_file=raster_depth_file,
@@ -199,6 +197,7 @@ def process_pipeline(
     while (dt.datetime(int(year_end), int(month_end), int(day_end)) - dt.datetime(int(year), int(month),
                                                                                   int(day))).days >= 0:
 
+        # loop over countries
         for country in list_countries:
 
             print(f'Processing data for {country}...')
@@ -221,6 +220,7 @@ def process_pipeline(
                 }
             )
 
+            # loop over sub-folders (impacts, raster, etc.)
             for sub_folder in LIST_SUBFOLDERS_BUFFER:
                 print(f'\tProcessing {sub_folder} data...')
 
