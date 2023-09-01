@@ -546,7 +546,17 @@ def reproject_and_maximize_tifs(tifs_list: list[str], output_file: str, to_epsg_
 
 
 
-def tifs_2_tif_depth(folder_path: str, tifs_list: list[str], postfix: str, post_stem: str = 'ens', threshold: float = 0.8, n_bands: int = 211, max_block_process_size: int = 1000, max_resolution: int = 16000, to_epsg_3857: bool = True) -> tuple[str, bool, tuple]:
+def tifs_2_tif_depth(
+        folder_path: str,
+        tifs_list: list[str],
+        postfix: str,
+        post_stem: str = 'ens',
+        threshold: float = 0.8,
+        n_bands: int = 211,
+        max_block_process_size: int = 1000,
+        max_resolution: int = 16000,
+        to_epsg_3857: bool = True
+) -> tuple[str, bool, tuple, int]:
     """
     Get a list of tifs and return a tif with the depth
     :param folder_path:
@@ -707,7 +717,10 @@ def tifs_2_tif_depth(folder_path: str, tifs_list: list[str], postfix: str, post_
 
         if to_epsg_3857:
             bbox = reproject_tif(output_file, to_crs='EPSG:3857')
-        return output_file, empty, bbox
+
+        max_band_value = np.max(array)
+
+        return output_file, empty, bbox, max_band_value
 
     # Stack the arrays into a single numpy array
     stacked = np.stack(arrays)
@@ -793,5 +806,7 @@ def tifs_2_tif_depth(folder_path: str, tifs_list: list[str], postfix: str, post_
     if to_epsg_3857:
         bbox = reproject_tif(output_file, to_crs='EPSG:3857')
 
+    max_band_value = np.max(ensemble_agreement)
+
     # Return the output file name, and a boolean indicating if the array is empty
-    return output_file, empty, bbox
+    return output_file, empty, bbox, max_band_value

@@ -106,7 +106,7 @@ def process_files_include_exclude(
         username: str = None,
         password: str = None,
         server: str = None,
-) -> tuple[bool, bool, tuple]:
+) -> tuple[bool, bool, tuple, int]:
     """
     Process files in buffer folder
     :param include_str_list:
@@ -128,7 +128,7 @@ def process_files_include_exclude(
         raise ValueError(f'No files found in buffer folder containing {", ".join(include_str_list)}')
 
     # process depth map
-    raster_depth_file, empty, bbox = tifs_2_tif_depth(
+    raster_depth_file, empty, bbox, max_band_value = tifs_2_tif_depth(
         folder_path=buffer_path,
         tifs_list=list_files,
         postfix=postfix,
@@ -155,7 +155,7 @@ def process_files_include_exclude(
 
     print(f'\t\t\tCreated depth map{" (uploaded to geoserver)" if geoserver and upload_success else ""}: \033[32m{raster_depth_file}\033[0m ', end='')
 
-    return success, empty, bbox
+    return success, empty, bbox, max_band_value
 
 
 def process_pipeline(
@@ -168,13 +168,20 @@ def process_pipeline(
         username: str = None,
         password: str = None,
         server: str = None,
+        trigger_band_value: int = 5,
 ) -> None:
     """
-    Pipeline to populate ARC's Flood Explorer buffer
+    Process pipeline
     :param start_date:
     :param end_date:
     :param n_days:
     :param list_countries:
+    :param to_epsg_3857:
+    :param geoserver:
+    :param username:
+    :param password:
+    :param server:
+    :param trigger_band_value:
     :return:
     """
 
@@ -249,7 +256,7 @@ def process_pipeline(
                         print(f'\t\tProcessing \033[1mday {i_day}\033[0m : ({year_n}-{month_n}-{day_n}) ... ')
 
                         # create depth map
-                        success, empty, bbox = process_files_include_exclude(
+                        success, empty, bbox, max_band_value = process_files_include_exclude(
                             include_str_list=[f'fe{year_n}{month_n}{day_n}', f'rd{year}{month}{day}'],
                             exclude_str_list=['Agreement', '_depth'],
                             buffer_path=tmp_path,
@@ -262,6 +269,10 @@ def process_pipeline(
                             password=password,
                             server=server,
                         )
+
+                        # above threshold
+                        above_threshold = max_band_value >= trigger_band_value
+
                         if success:
                             print(f'(\033[1mday {i_day}\033[0m)')
                         else:
@@ -289,7 +300,17 @@ def process_pipeline(
 
                             # check if empty:
                             print('\t\t\tNot empty? ', end='')
+
                             if empty:
+                                print('\033[31m' + '✘' + '\033[0m')
+                            else:
+                                print('\033[32m' + '✔' + '\033[0m')
+
+                            # check if above threshold
+                            threshold_comparison = '≥' if above_threshold else '<'
+                            print('\t\t\tAbove band threshold?' + f' ({max_band_value} {threshold_comparison} {trigger_band_value}) ', end='')
+
+                            if not(above_threshold):
                                 print('\033[31m' + '✘' + '\033[0m')
 
                                 # check if ongoing event exists
@@ -552,6 +573,7 @@ def process_pipeline_historic(
         username: str = None,
         password: str = None,
         server: str = None,
+        depth_band_trigger: int = 5
 ) -> None:
     """
     Process the pipeline for historic data
@@ -621,7 +643,8 @@ def process_pipeline_historic(
             geoserver=geoserver,
             username=username,
             password=password,
-            server=server
+            server=server,
+            trigger_band_value=depth_band_trigger
         )
 
         # update json latest date
@@ -650,6 +673,7 @@ if __name__ == "__main__":
     parser.add_argument('-u', '--username', help='Geoserver username', type=str, default=None)
     parser.add_argument('-p', '--password', help='Geoserver password', type=str, default=None)
     parser.add_argument('-server', '--server', help='Geoserver server', type=str, default='http://localhost:8080/geoserver/')
+    parser.add_argument('-d', '--depth_band_trigger', help='Depth band trigger', type=int, default=5)
     args = parser.parse_args()
 
     username = args.username
@@ -675,7 +699,8 @@ if __name__ == "__main__":
             geoserver=args.geoserver,
             username=username,
             password=password,
-            server=server
+            server=server,
+            trigger_band_value=args.depth_band_trigger
         )
     else:
         if args.to_now:
@@ -693,7 +718,8 @@ if __name__ == "__main__":
             geoserver=args.geoserver,
             username=username,
             password=password,
-            server=server
+            server=server,
+            depth_band_trigger=args.depth_band_trigger
         )
 
         for i in range(n_days_to_run-1):
@@ -702,5 +728,6 @@ if __name__ == "__main__":
                 geoserver=args.geoserver,
                 username=username,
                 password=password,
-                server=server
+                server=server,
+                depth_band_trigger=args.depth_band_trigger
             )
