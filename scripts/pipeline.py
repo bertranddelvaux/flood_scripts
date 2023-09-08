@@ -14,7 +14,7 @@ import pandas as pd
 import numpy as np
 
 from constants.constants import DATA_FOLDER, RASTER_FOLDER, IMPACTS_FOLDER, EVENTS_FOLDER, LIST_COUNTRIES, \
-    LIST_SUBFOLDERS_BUFFER, BUFFER_FOLDER, N_DAYS, COUNTRIES_FOLDER, HISTORICAL_STARTING_DATES
+    LIST_SUBFOLDERS_BUFFER, BUFFER_FOLDER, N_DAYS, N_DAYS_SINCE_LAST_THRESHOLD, TRIGGER_BAND_VALUE, COUNTRIES_FOLDER, HISTORICAL_STARTING_DATES
 
 from geoserver.interface import uploadToGeoserver, deleteFromGeoserver
 
@@ -162,19 +162,21 @@ def process_pipeline(
         start_date: str = None,
         end_date: str = None,
         n_days: int = N_DAYS,
+        n_days_since_last_threshold: int = N_DAYS_SINCE_LAST_THRESHOLD,
         list_countries: list[str] = LIST_COUNTRIES,
         to_epsg_3857: bool = True,
         geoserver: bool = False,
         username: str = None,
         password: str = None,
         server: str = None,
-        trigger_band_value: int = 5,
+        trigger_band_value: int = TRIGGER_BAND_VALUE,
 ) -> None:
     """
     Process pipeline
     :param start_date:
     :param end_date:
     :param n_days:
+    :param n_days_since_last_threshold:
     :param list_countries:
     :param to_epsg_3857:
     :param geoserver:
@@ -310,6 +312,20 @@ def process_pipeline(
                             threshold_comparison = '≥' if above_threshold else '<'
                             print('\t\t\tAbove band threshold?' + f' ({max_band_value} {threshold_comparison} {trigger_band_value}) ', end='')
 
+                            #TODO:
+                            # If not above threshold:
+                            #    if ongoing event exists:
+                            #        if 'number_of_days_since_last_threshold' >= n_days_since_last_threshold:
+                            #           close ongoing event:
+                            #               copy 'tmp' event to 'ongoing' event
+                            #               delete 'tmp' event
+                            #        else:
+                            #           if 'tmp' event does not exist:
+                            #              create 'tmp' event as a copy of 'ongoing' event
+                            #           else:
+                            #              update 'tmp' event
+
+                            # Not above threshold
                             if not(above_threshold):
                                 print('\033[31m' + '✘' + '\033[0m')
 
@@ -334,40 +350,84 @@ def process_pipeline(
                                     json_file_event = f'{year_ongoing}_{month_ongoing}_{day_ongoing}.json'
                                     dict_event = jsonFileToDict(json_path_event, json_file_event)
 
-                                    # close ongoing event
-                                    print(
-                                        f'\t\t\t\t\033[95mClosing ongoing event that started on {year_ongoing:04}_{month_ongoing:02}_{day_ongoing:02}... \033[0m')
-                                    dict_country = set_ongoing_event(json_path_country, json_file_country, False)
-                                    dict_year = set_ongoing_event(json_path_year, json_file_year, False)
+                                    # get 'ongoing' and 'tmp' event files
+                                    ongoing_event_file = os.path.join(json_path_event, json_file_event)
+                                    tmp_event_file = ongoing_event_file.replace('.json', '_tmp.json')
 
-                                    # update jsons
-                                    # TODO: this is where country and year jsons are incremented
+                                    # only close the event if the last above threshold day happened more than n days ago
+                                    if dict_event['number_of_days_since_last_threshold'] >= n_days_since_last_threshold:
 
-                                    # get event start date
-                                    start_date = dict_event['start_date']
+                                        #TODO: copy temporary json event file
 
-                                    dict_year['total_events_year'] += 1
-                                    dict_year['total_days_year'] += dict_event['total_days_event']
-                                    dict_year['event_by_event'][start_date] = {
-                                        'path': os.path.join(DATA_FOLDER, country, EVENTS_FOLDER, year_ongoing, month_ongoing, day_ongoing, json_file_event),
-                                        'event': dict_event
-                                    }
+                                        shutil.copy(tmp_event_file, ongoing_event_file)
+                                        os.remove(tmp_event_file)
 
-                                    dict_country['total_events_country'] += 1
-                                    dict_country['total_days_country'] += dict_event['total_days_event']
-                                    dict_country['year_by_year'].setdefault(year_ongoing, {})
-                                    dict_country['year_by_year'][year_ongoing][start_date] = dict_year['event_by_event'][start_date]
+                                        # load json event file
+                                        dict_event = jsonFileToDict(json_path_event, json_file_event)
 
-                                    # TODO: pick up the biggest numbers from the ongoing event and put them in the peak event: flooded area, flooded population, losses, severity_index
+                                        # close ongoing event
+                                        print(
+                                            f'\t\t\t\t\033[95mClosing ongoing event that started on {year_ongoing:04}_{month_ongoing:02}_{day_ongoing:02}... \033[0m')
+                                        dict_country = set_ongoing_event(json_path_country, json_file_country, False)
+                                        dict_year = set_ongoing_event(json_path_year, json_file_year, False)
 
-                                    dict_country = save_json_last_edit(json_path_country, json_file_country,
-                                                                       dict_country)
-                                    dict_year = save_json_last_edit(json_path_year, json_file_year, dict_year)
+                                        # update jsons
+                                        # TODO: this is where country and year jsons are incremented
+
+                                        # get event start date
+                                        start_date = dict_event['start_date']
+
+                                        dict_year['total_events_year'] += 1
+                                        dict_year['total_days_year'] += dict_event['total_days_event']
+                                        dict_year['event_by_event'][start_date] = {
+                                            'path': os.path.join(DATA_FOLDER, country, EVENTS_FOLDER, year_ongoing, month_ongoing, day_ongoing, json_file_event),
+                                            'event': dict_event
+                                        }
+
+                                        dict_country['total_events_country'] += 1
+                                        dict_country['total_days_country'] += dict_event['total_days_event']
+                                        dict_country['year_by_year'].setdefault(year_ongoing, {})
+                                        dict_country['year_by_year'][year_ongoing][start_date] = dict_year['event_by_event'][start_date]
+
+                                        # TODO: pick up the biggest numbers from the ongoing event and put them in the peak event: flooded area, flooded population, losses, severity_index
+
+                                        dict_country = save_json_last_edit(json_path_country, json_file_country,
+                                                                           dict_country)
+                                        dict_year = save_json_last_edit(json_path_year, json_file_year, dict_year)
+
+                                    else:
+
+                                        if not os.path.exists(tmp_event_file):
+                                            print(f'\t\t\t\t\033[95mCreating temporary json file for the ongoing event that started on {year_ongoing:04}_{month_ongoing:02}_{day_ongoing:02}... \033[0m')
+                                            shutil.copy(ongoing_event_file,tmp_event_file)
+
+                                        # # Check if there is a temporary json file for the event
+                                        # if not os.path.exists(os.path.join(DATA_FOLDER, country, EVENTS_FOLDER, year_ongoing, month_ongoing, day_ongoing, f'{year_ongoing}_{month_ongoing}_{day_ongoing}_temp.json')):
+                                        #     # if there isn't, copy the original json file and load it
+                                        #     shutil.copy(
+                                        #         os.path.join(json_path_event, json_file_event),
+                                        #         os.path.join(json_path_event, json_file_event).replace('.json', '_temp.json'),
+                                        #     )
+
+                                        dict_event = jsonFileToDict(json_path_event, json_file_event)
+
+                                        print(f'\t\t\t\t\033[95mIncrementing the number of days since last day above threshold \033[0m')
+                                        dict_event["number_of_days_since_last_threshold"] += 1
+
+                                        # print number of days since last day above threshold
+                                        print(
+                                            f'\t\t\t\t\033[95mNumber of days since last day above threshold: {dict_event["number_of_days_since_last_threshold"]}\033[0m')
+
+                                        dict_event = save_json_last_edit(
+                                            json_path=json_path_event,
+                                            json_file=json_file_event,
+                                            json_dict=dict_event
+                                        )
 
                                 else:
                                     print('\033[31m' + '✘' + '\033[0m')
 
-
+                            # Above threshold
                             else:
                                 print('\033[32m' + '✔' + '\033[0m')
 
@@ -376,8 +436,6 @@ def process_pipeline(
 
                                 if dict_country['ongoing']:
                                     print('\033[32m' + '✔' + '\033[0m')
-
-
 
                                 else:
                                     print('\033[31m' + '✘' + '\033[0m')
@@ -400,6 +458,7 @@ def process_pipeline(
                                             # 'ongoing': True,
                                             'start_date': f'{year_n:04}_{month_n:02}_{day_n:02}',
                                             'total_days_event': 0,
+                                            'last_day_above_threshold': 0,
                                             'day_by_day': [],  # TODO: add the first day
                                             # 'stats': {}, #TODO: initialize with the stats of the first day
                                             'peak_flood': None,
@@ -448,6 +507,14 @@ def process_pipeline(
                                                                year_ongoing, month_ongoing, day_ongoing)
                                 json_file_event = f'{year_ongoing}_{month_ongoing}_{day_ongoing}.json'
                                 dict_event = jsonFileToDict(json_path_event, json_file_event)
+
+                                # get 'ongoing' and 'tmp' event files
+                                ongoing_event_file = os.path.join(json_path_event, json_file_event)
+                                tmp_event_file = ongoing_event_file.replace('.json', '_tmp.json')
+
+                                # remove the temporary json file if it exists
+                                if os.path.exists(tmp_event_file):
+                                    os.remove(tmp_event_file)
 
                                 ## Copy files
 
@@ -501,6 +568,7 @@ def process_pipeline(
 
                                 # update the json event of the ongoing event
                                 dict_event['total_days_event'] += 1
+                                dict_event['number_of_days_since_last_threshold'] = 0
                                 dict_event['max_depth_file'] = os.path.basename(max_depth_file)
                                 dict_event['day_by_day'].append({
                                     'day': dict_event['total_days_event'],
@@ -567,6 +635,7 @@ def process_pipeline(
 def process_pipeline_historic(
         start_date: str = None,
         end_date: str = None,
+        n_days_since_last_threshold: int = N_DAYS_SINCE_LAST_THRESHOLD,
         list_countries: list[str] = LIST_COUNTRIES,
         to_epsg_3857: bool = True,
         geoserver: bool = False,
@@ -639,6 +708,7 @@ def process_pipeline_historic(
             start_date=start_date,
             end_date=end_date,
             n_days=n_days,
+            n_days_since_last_threshold=n_days_since_last_threshold,
             list_countries=[country],
             geoserver=geoserver,
             username=username,
@@ -673,7 +743,8 @@ if __name__ == "__main__":
     parser.add_argument('-u', '--username', help='Geoserver username', type=str, default=None)
     parser.add_argument('-p', '--password', help='Geoserver password', type=str, default=None)
     parser.add_argument('-server', '--server', help='Geoserver server', type=str, default='http://localhost:8080/geoserver/')
-    parser.add_argument('-d', '--depth_band_trigger', help='Depth band trigger', type=int, default=5)
+    parser.add_argument('-d', '--depth_band_trigger', help='Depth band trigger', type=int, default=TRIGGER_BAND_VALUE)
+    parser.add_argument('-t', '--n_days_since_last_threshold', help='Number of days since last threshold', type=int, default=N_DAYS_SINCE_LAST_THRESHOLD)
     args = parser.parse_args()
 
     username = args.username
@@ -695,6 +766,7 @@ if __name__ == "__main__":
             start_date=args.start_date,
             end_date=args.end_date,
             n_days=args.n_days,
+            n_days_since_last_threshold=args.n_days_since_last_threshold,
             list_countries=args.list_countries,
             geoserver=args.geoserver,
             username=username,
@@ -714,6 +786,7 @@ if __name__ == "__main__":
         process_pipeline_historic(
             start_date=args.start_date,
             end_date=args.end_date,
+            n_days_since_last_threshold=args.n_days_since_last_threshold,
             list_countries=args.list_countries,
             geoserver=args.geoserver,
             username=username,
@@ -724,6 +797,7 @@ if __name__ == "__main__":
 
         for i in range(n_days_to_run-1):
             process_pipeline_historic(
+                n_days_since_last_threshold=args.n_days_since_last_threshold,
                 list_countries=args.list_countries,
                 geoserver=args.geoserver,
                 username=username,

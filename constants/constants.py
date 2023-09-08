@@ -20,6 +20,14 @@ N_DAYS = 11
 # number of bands
 N_BANDS = 211
 
+# threshold
+
+# max number of days between 2 successive "peaks" of the flood (triggered when above 0.2m)
+N_DAYS_SINCE_LAST_THRESHOLD = 15
+
+# band
+TRIGGER_BAND_VALUE = 5  # 0.2m
+
 # default dict values
 DICT_DEFAULT_VALUES = {
     'created': None,
