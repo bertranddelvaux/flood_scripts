@@ -614,10 +614,8 @@ def process_pipeline(
 
 
                                     dict_event['adm0_max'] = np.maximum(merged_adm0, pd.DataFrame.from_records(dict_event['adm0_max'])).to_dict(orient='records')
-                                    dict_event['adm1_max'] = np.maximum(merged_adm1, pd.DataFrame.from_records(
-                                        dict_event['adm1_max'])).to_dict(orient='records')
-                                    dict_event['adm1_max'] = np.maximum(merged_adm1, pd.DataFrame.from_records(
-                                        dict_event['adm1_max'])).to_dict(orient='records')
+                                    dict_event['adm1_max'] = np.maximum(merged_adm1, pd.DataFrame.from_records(dict_event['adm1_max'])).to_dict(orient='records')
+                                    dict_event['adm2_max'] = np.maximum(merged_adm2, pd.DataFrame.from_records(dict_event['adm2_max'])).to_dict(orient='records')
 
                                 dict_event = save_json_last_edit(
                                     json_path=json_path_event,
