@@ -20,7 +20,8 @@ N_DAYS = 11
 # number of bands
 N_BANDS = 211
 
-# threshold
+# threshold of ensembles agreement
+AGREEMENT_THRESHOLD = 0.5  # 50% agreement
 
 # max number of days between 2 successive "peaks" of the flood (triggered when above 0.2m)
 N_DAYS_SINCE_LAST_THRESHOLD = 3

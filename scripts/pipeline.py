@@ -29,6 +29,8 @@ from utils.csv2geojson import csv2geojson
 from utils.string_format import colorize_text
 from utils.dataframe import sum_list_dict
 
+from constants.constants import AGREEMENT_THRESHOLD
+
 
 def clean_buffer_impacts(
         year: str,
@@ -100,7 +102,7 @@ def process_files_include_exclude(
         buffer_path: str,
         postfix: str = '_depth.tif',
         n_bands: int = 211,
-        threshold: float = 0.8,
+        threshold: float = AGREEMENT_THRESHOLD,
         to_epsg_3857: bool = True,
         geoserver: bool = False,
         username: str = None,
@@ -165,6 +167,7 @@ def process_pipeline(
         n_days_since_last_threshold: int = N_DAYS_SINCE_LAST_THRESHOLD,
         list_countries: list[str] = LIST_COUNTRIES,
         to_epsg_3857: bool = True,
+        threshold: float = AGREEMENT_THRESHOLD,
         geoserver: bool = False,
         username: str = None,
         password: str = None,
@@ -179,6 +182,7 @@ def process_pipeline(
     :param n_days_since_last_threshold:
     :param list_countries:
     :param to_epsg_3857:
+    :param threshold:
     :param geoserver:
     :param username:
     :param password:
@@ -264,7 +268,7 @@ def process_pipeline(
                             buffer_path=tmp_path,
                             postfix='_depth.tif',
                             n_bands=211,
-                            threshold=0.8,
+                            threshold=threshold,
                             to_epsg_3857=to_epsg_3857,
                             geoserver=geoserver,
                             username=username,
@@ -634,6 +638,7 @@ def process_pipeline_historic(
         start_date: str = None,
         end_date: str = None,
         n_days_since_last_threshold: int = N_DAYS_SINCE_LAST_THRESHOLD,
+        threshold: float = AGREEMENT_THRESHOLD,
         list_countries: list[str] = LIST_COUNTRIES,
         to_epsg_3857: bool = True,
         geoserver: bool = False,
@@ -707,6 +712,7 @@ def process_pipeline_historic(
             end_date=end_date,
             n_days=n_days,
             n_days_since_last_threshold=n_days_since_last_threshold,
+            threshold=threshold,
             list_countries=[country],
             geoserver=geoserver,
             username=username,
@@ -743,6 +749,7 @@ if __name__ == "__main__":
     parser.add_argument('-server', '--server', help='Geoserver server', type=str, default='http://localhost:8080/geoserver/')
     parser.add_argument('-d', '--depth_band_trigger', help='Depth band trigger', type=int, default=TRIGGER_BAND_VALUE)
     parser.add_argument('-t', '--n_days_since_last_threshold', help='Number of days since last threshold', type=int, default=N_DAYS_SINCE_LAST_THRESHOLD)
+    parser.add_argument('-at', '--agreement_threshold', help='Agreement threshold', type=float, default=AGREEMENT_THRESHOLD)
     args = parser.parse_args()
 
     username = args.username
@@ -765,6 +772,7 @@ if __name__ == "__main__":
             end_date=args.end_date,
             n_days=args.n_days,
             n_days_since_last_threshold=args.n_days_since_last_threshold,
+            threshold=args.agreement_threshold,
             list_countries=args.list_countries,
             geoserver=args.geoserver,
             username=username,
@@ -785,6 +793,7 @@ if __name__ == "__main__":
             start_date=args.start_date,
             end_date=args.end_date,
             n_days_since_last_threshold=args.n_days_since_last_threshold,
+            threshold=args.agreement_threshold,
             list_countries=args.list_countries,
             geoserver=args.geoserver,
             username=username,
@@ -796,6 +805,7 @@ if __name__ == "__main__":
         for i in range(n_days_to_run-1):
             process_pipeline_historic(
                 n_days_since_last_threshold=args.n_days_since_last_threshold,
+                threshold=args.agreement_threshold,
                 list_countries=args.list_countries,
                 geoserver=args.geoserver,
                 username=username,

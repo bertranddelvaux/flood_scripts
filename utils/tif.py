@@ -14,6 +14,8 @@ from rasterio.crs import CRS
 
 from utils.files import get_file_stem_until_post
 
+from constants.constants import AGREEMENT_THRESHOLD
+
 def tif_2_array(tif_file: str) -> tuple[np.ndarray, dict]:
     """
     Get a tif file and return an array and the metadata
@@ -551,7 +553,7 @@ def tifs_2_tif_depth(
         tifs_list: list[str],
         postfix: str,
         post_stem: str = 'ens',
-        threshold: float = 0.8,
+        threshold: float = AGREEMENT_THRESHOLD,
         n_bands: int = 211,
         max_block_process_size: int = 1000,
         max_resolution: int = 16000,
