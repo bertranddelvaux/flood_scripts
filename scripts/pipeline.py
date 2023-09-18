@@ -28,6 +28,7 @@ from utils.sftp import download_pipeline
 from utils.csv2geojson import csv2geojson
 from utils.string_format import colorize_text
 from utils.dataframe import sum_list_dict
+from utils.dataframe import find_maximum_values
 
 from constants.constants import AGREEMENT_THRESHOLD
 
@@ -617,9 +618,17 @@ def process_pipeline(
                                         }
 
 
-                                    dict_event['adm0_max'] = np.maximum(merged_adm0, pd.DataFrame.from_records(dict_event['adm0_max'])).to_dict(orient='records')
-                                    dict_event['adm1_max'] = np.maximum(merged_adm1, pd.DataFrame.from_records(dict_event['adm1_max'])).to_dict(orient='records')
-                                    dict_event['adm2_max'] = np.maximum(merged_adm2, pd.DataFrame.from_records(dict_event['adm2_max'])).to_dict(orient='records')
+                                    # dict_event['adm0_max'] = np.maximum(merged_adm0, pd.DataFrame.from_records(dict_event['adm0_max'])).to_dict(orient='records')
+                                    # dict_event['adm1_max'] = np.maximum(merged_adm1, pd.DataFrame.from_records(dict_event['adm1_max'])).to_dict(orient='records')
+                                    # if merged_adm2.shape != pd.DataFrame.from_records(dict_event['adm2_max']).shape:
+                                    #     raise Exception('adm2 shape is different from adm1 shape')
+                                    # else:
+                                    #     dict_event['adm2_max'] = np.maximum(merged_adm2, pd.DataFrame.from_records(dict_event['adm2_max'])).to_dict(orient='records')
+
+                                    dict_event['adm0_max'] = find_maximum_values(merged_adm0, pd.DataFrame.from_records(dict_event['adm0_max'])).to_dict(orient='records')
+                                    dict_event['adm1_max'] = find_maximum_values(merged_adm1, pd.DataFrame.from_records(dict_event['adm1_max'])).to_dict(orient='records')
+                                    dict_event['adm2_max'] = find_maximum_values(merged_adm2, pd.DataFrame.from_records(dict_event['adm2_max'])).to_dict(orient='records')
+
 
                                 dict_event = save_json_last_edit(
                                     json_path=json_path_event,
