@@ -137,7 +137,7 @@ def process_files_include_exclude(
         postfix=postfix,
         n_bands=n_bands,
         threshold=threshold,
-        to_epsg_3857=to_epsg_3857
+        to_epsg_3857=to_epsg_3857,
     )
 
     success = True
@@ -280,7 +280,7 @@ def process_pipeline(
                             include_str_list=[f'fe{year_n}{month_n}{day_n}', f'rd{year}{month}{day}'],
                             exclude_str_list=['Agreement', '_depth'],
                             buffer_path=tmp_path,
-                            postfix='_depth.tif',
+                            postfix=f'_{n_days_since_last_threshold}d_depth.tif',
                             n_bands=211,
                             threshold=threshold,
                             to_epsg_3857=to_epsg_3857,
