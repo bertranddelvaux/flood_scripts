@@ -5,6 +5,7 @@ import json
 
 from utils.geodataframe import gdf_to_geotiff
 from utils.tif import reproject_tif
+from utils.dataframe import agg_threshold
 
 
 def csv2geojson(csv_file, shp_file, output_file, geotiff:bool = True, to_epsg_3857: bool = True, decimals=2):
@@ -29,13 +30,9 @@ def csv2geojson(csv_file, shp_file, output_file, geotiff:bool = True, to_epsg_38
     # Keep only the desired columns
     df = df[['admin_code', 'band_1', 'band_5', 'band_11']]
 
-    # Convert columns to floats
-    df['band_1'] = df['band_1'].astype(float)
-    df['band_5'] = df['band_5'].astype(float)
-    df['band_11'] = df['band_11'].astype(float)
-
     # Group by admin_code and take the mean of each group
-    df_grouped = df.groupby('admin_code').mean().astype(int)  # astype(int) is added to convert the values to int for entire individuals
+    #df_grouped = df.groupby('admin_code').mean().astype(int)  # astype(int) is added to convert the values to int for entire individuals
+    df_grouped = df.groupby('admin_code').agg(agg_threshold)
 
     # Merge the two dataframes on admin_code and ADM2_CODE
     merged = pd.merge(df_grouped, shapefile, left_on='admin_code', right_on='ADM2_CODE')

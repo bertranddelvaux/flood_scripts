@@ -240,17 +240,18 @@ def process_pipeline(
 
                 if sub_folder == IMPACTS_FOLDER:
                     folder_path = os.path.join(DATA_FOLDER, country, sub_folder)
-                    csv_file = [os.path.join(folder_path, f) for f in os.listdir(folder_path) if
+                    csv_files = [os.path.join(folder_path, f) for f in os.listdir(folder_path) if
                                 f'rd{year}{month}{day}' in f and f.endswith('.csv') and not f.endswith(
-                                    '_processed.csv')][0]
-                    print(f'\t\tProcessing {csv_file} ... ', end='')
-                    merged_adm0, merged_adm1, merged_adm2 = csv2geojson(
-                        csv_file=csv_file,
-                        shp_file=os.path.join(COUNTRIES_FOLDER, f'{country}_adm_shapefile.zip'),
-                        output_file=csv_file.replace('.csv', '.geojson'),
-                        to_epsg_3857=to_epsg_3857,
-                    )
-                    print(f'\033[32m' + '✔' + '\033[0m')
+                                    '_processed.csv')]
+                    for csv_file in csv_files:
+                        print(f'\t\tProcessing {csv_file} ... ', end='')
+                        merged_adm0, merged_adm1, merged_adm2 = csv2geojson(
+                            csv_file=csv_file,
+                            shp_file=os.path.join(COUNTRIES_FOLDER, f'{country}_adm_shapefile.zip'),
+                            output_file=csv_file.replace('.csv', '.geojson'),
+                            to_epsg_3857=to_epsg_3857,
+                        )
+                        print(f'\033[32m' + '✔' + '\033[0m')
 
                 elif sub_folder == RASTER_FOLDER:
                     tmp_path = os.path.join(DATA_FOLDER, country, sub_folder, BUFFER_FOLDER)
