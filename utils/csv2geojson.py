@@ -34,13 +34,17 @@ def csv2geojson(csv_file, shp_file, output_file, geotiff:bool = True, to_epsg_38
     #df_grouped = df.groupby('admin_code').mean().astype(int)  # astype(int) is added to convert the values to int for entire individuals
     df_grouped = df.groupby('admin_code').agg(agg_threshold)
 
+    # str for admin_code
+    df_named = df_grouped.copy(deep=True).reset_index()
+    df_named['admin_code'] = df_named['admin_code'].astype(str)
+
     # Merge the two dataframes on admin_code and ADM2_CODE
     merged = pd.merge(df_grouped, shapefile, left_on='admin_code', right_on='ADM2_CODE')
 
     # Convert the columns from float to int in the merged DataFrame
-    merged['ADM2_CODE'] = merged['ADM2_CODE'].astype(int)
-    merged['ADM1_CODE'] = merged['ADM1_CODE'].astype(int)
-    merged['ADM0_CODE'] = merged['ADM0_CODE'].astype(int)
+    # merged['ADM2_CODE'] = merged['ADM2_CODE'].astype(int)
+    # merged['ADM1_CODE'] = merged['ADM1_CODE'].astype(int)
+    # merged['ADM0_CODE'] = merged['ADM0_CODE'].astype(int)
 
     # Write the dataframe into a processed csv
     merged.drop(columns='geometry').to_csv(output_file.replace('.geojson', '_processed.csv'))
@@ -50,6 +54,7 @@ def csv2geojson(csv_file, shp_file, output_file, geotiff:bool = True, to_epsg_38
     merged_adm2.to_csv(output_file.replace('.geojson', '_adm2_processed.csv'))
     merged_adm1.to_csv(output_file.replace('.geojson', '_adm1_processed.csv'))
     merged_adm0.to_csv(output_file.replace('.geojson', '_adm0_processed.csv'))
+    df_named.to_csv(output_file.replace('.geojson', '_grouped_processed.csv'))
 
     # Write the GeoDataFrame to a GeoJSON file
     gdf = gpd.GeoDataFrame(merged)
@@ -68,7 +73,7 @@ def csv2geojson(csv_file, shp_file, output_file, geotiff:bool = True, to_epsg_38
         with open(output_file, 'w') as f:
             f.write(json.dumps(data, separators=(',', ':')))
 
-    return merged_adm0, merged_adm1, merged_adm2
+    return merged_adm0, merged_adm1, merged_adm2, df_named
 
 
 if __name__ == "__main__":

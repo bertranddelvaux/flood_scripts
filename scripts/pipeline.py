@@ -247,14 +247,14 @@ def process_pipeline(
                         print(f'\t\tProcessing {csv_file} ... ', end='')
                         economic_data_available = False
                         if 'population' in csv_file:
-                            merged_population_adm0, merged_population_adm1, merged_population_adm2 = csv2geojson(
+                            merged_population_adm0, merged_population_adm1, merged_population_adm2, df_grouped_population = csv2geojson(
                                 csv_file=csv_file,
                                 shp_file=os.path.join(COUNTRIES_FOLDER, f'{country}_adm_shapefile.zip'),
                                 output_file=csv_file.replace('.csv', '.geojson'),
                                 to_epsg_3857=to_epsg_3857,
                             )
                         elif 'economic' in csv_file:
-                            merged_economic_adm0, merged_economic_adm1, merged_economic_adm2 = csv2geojson(
+                            merged_economic_adm0, merged_economic_adm1, merged_economic_adm2, df_grouped_economic = csv2geojson(
                                 csv_file=csv_file,
                                 shp_file=os.path.join(COUNTRIES_FOLDER, f'{country}_adm_shapefile.zip'),
                                 output_file=csv_file.replace('.csv', '.geojson'),
@@ -632,10 +632,14 @@ def process_pipeline(
                                     dict_event['adm0_max'] = merged_population_adm0.to_dict(orient='records')
                                     dict_event['adm1_max'] = merged_population_adm1.to_dict(orient='records')
                                     dict_event['adm2_max'] = merged_population_adm2.to_dict(orient='records')
+                                    dict_event['population_max'] = df_grouped_population.to_dict(orient='records')
+                                    dict_event['population_total'] = [{key: int(value)} for key, value in pd.DataFrame.from_records(dict_event['population_max']).sum().items() if key != 'admin_code']
                                     if economic_data_available:
                                         dict_event['adm0_eco_max'] = merged_economic_adm0.to_dict(orient='records')
                                         dict_event['adm1_eco_max'] = merged_economic_adm1.to_dict(orient='records')
                                         dict_event['adm2_eco_max'] = merged_economic_adm2.to_dict(orient='records')
+                                        dict_event['economic_max'] = df_grouped_economic.to_dict(orient='records')
+                                        dict_event['economic_total'] = [{key: int(value)} for key, value in pd.DataFrame.from_records(dict_event['economic_max']).sum().items() if key != 'admin_code']
                                 else:
                                     # update the stats of the event: take the maximum value of each stat
                                     for stat in dict_event['stats']:
@@ -658,16 +662,21 @@ def process_pipeline(
                                     dict_event['adm0_max'] = find_maximum_values(merged_population_adm0, pd.DataFrame.from_records(dict_event['adm0_max'])).to_dict(orient='records')
                                     dict_event['adm1_max'] = find_maximum_values(merged_population_adm1, pd.DataFrame.from_records(dict_event['adm1_max'])).to_dict(orient='records')
                                     dict_event['adm2_max'] = find_maximum_values(merged_population_adm2, pd.DataFrame.from_records(dict_event['adm2_max'])).to_dict(orient='records')
+                                    dict_event['population_max'] = find_maximum_values(df_grouped_population, pd.DataFrame.from_records(dict_event['population_max'])).to_dict(orient='records')
+                                    dict_event['population_total'] = [{key: int(value)} for key, value in pd.DataFrame.from_records(dict_event['population_max']).sum().items() if key != 'admin_code']
 
                                     if economic_data_available:
                                         if 'adm0_eco_max' not in dict_event.keys():
                                             dict_event['adm0_eco_max'] = merged_economic_adm0.to_dict(orient='records')
                                             dict_event['adm1_eco_max'] = merged_economic_adm1.to_dict(orient='records')
                                             dict_event['adm2_eco_max'] = merged_economic_adm2.to_dict(orient='records')
+                                            dict_event['economic_max'] = df_grouped_economic.to_dict(orient='records')
                                         else:
                                             dict_event['adm0_eco_max'] = find_maximum_values(merged_economic_adm0, pd.DataFrame.from_records(dict_event['adm0_eco_max'])).to_dict(orient='records')
                                             dict_event['adm1_eco_max'] = find_maximum_values(merged_economic_adm1, pd.DataFrame.from_records(dict_event['adm1_eco_max'])).to_dict(orient='records')
                                             dict_event['adm2_eco_max'] = find_maximum_values(merged_economic_adm2, pd.DataFrame.from_records(dict_event['adm2_eco_max'])).to_dict(orient='records')
+                                            dict_event['economic_max'] = find_maximum_values(df_grouped_economic, pd.DataFrame.from_records(dict_event['economic_max'])).to_dict(orient='records')
+                                        dict_event['economic_total'] = [{key: int(value)} for key, value in pd.DataFrame.from_records(dict_event['economic_max']).sum().items() if key != 'admin_code']
 
 
                                 dict_event = save_json_last_edit(
