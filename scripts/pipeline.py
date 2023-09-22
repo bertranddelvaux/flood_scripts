@@ -245,12 +245,24 @@ def process_pipeline(
                                     '_processed.csv')]
                     for csv_file in csv_files:
                         print(f'\t\tProcessing {csv_file} ... ', end='')
-                        merged_adm0, merged_adm1, merged_adm2 = csv2geojson(
-                            csv_file=csv_file,
-                            shp_file=os.path.join(COUNTRIES_FOLDER, f'{country}_adm_shapefile.zip'),
-                            output_file=csv_file.replace('.csv', '.geojson'),
-                            to_epsg_3857=to_epsg_3857,
-                        )
+                        economic_data_available = False
+                        if 'population' in csv_file:
+                            merged_population_adm0, merged_population_adm1, merged_population_adm2 = csv2geojson(
+                                csv_file=csv_file,
+                                shp_file=os.path.join(COUNTRIES_FOLDER, f'{country}_adm_shapefile.zip'),
+                                output_file=csv_file.replace('.csv', '.geojson'),
+                                to_epsg_3857=to_epsg_3857,
+                            )
+                        elif 'economic' in csv_file:
+                            merged_economic_adm0, merged_economic_adm1, merged_economic_adm2 = csv2geojson(
+                                csv_file=csv_file,
+                                shp_file=os.path.join(COUNTRIES_FOLDER, f'{country}_adm_shapefile.zip'),
+                                output_file=csv_file.replace('.csv', '.geojson'),
+                                to_epsg_3857=to_epsg_3857,
+                            )
+                            economic_data_available = True
+                        else:
+                            raise ValueError('Unknown impact type')
                         print(f'\033[32m' + '✔' + '\033[0m')
 
                 elif sub_folder == RASTER_FOLDER:
@@ -568,15 +580,22 @@ def process_pipeline(
                                 )
 
                                 # adm breakdown
-                                adm0 = merged_adm0.to_dict(orient='records')
-                                adm1 = merged_adm1.to_dict(orient='records')
-                                adm2 = merged_adm2.to_dict(orient='records')
+                                adm0 = merged_population_adm0.to_dict(orient='records')
+                                adm1 = merged_population_adm1.to_dict(orient='records')
+                                adm2 = merged_population_adm2.to_dict(orient='records')
+
+                                if economic_data_available:
+                                    # economic adm breakdown
+                                    adm0_eco = merged_economic_adm0.to_dict(orient='records')
+                                    adm1_eco = merged_economic_adm1.to_dict(orient='records')
+                                    adm2_eco = merged_economic_adm2.to_dict(orient='records')
 
                                 # update the json event of the ongoing event
                                 dict_event['total_days_event'] += 1
                                 dict_event['number_of_days_since_last_threshold'] = 0
                                 dict_event['max_depth_file'] = os.path.basename(max_depth_file)
-                                dict_event['day_by_day'].append({
+
+                                day_stats = {
                                     'day': dict_event['total_days_event'],
                                     'map': os.path.basename(depth_file),
                                     'bbox': bbox,
@@ -584,7 +603,15 @@ def process_pipeline(
                                     'adm0': adm0,
                                     'adm1': adm1,
                                     'adm2': adm2,
-                                })
+                                    'economic_data_available': economic_data_available,
+                                }
+
+                                if economic_data_available:
+                                    day_stats['adm0_eco'] = adm0_eco
+                                    day_stats['adm1_eco'] = adm1_eco
+                                    day_stats['adm2_eco'] = adm2_eco
+
+                                dict_event['day_by_day'].append(day_stats)
                                 dict_event['bbox_max'] = bbox_max
 
                                 if dict_event['total_days_event'] == 1:
@@ -594,12 +621,21 @@ def process_pipeline(
                                     }
                                     dict_event['peak_population'] = {
                                         'day': dict_event['total_days_event'],
-                                        'population': merged_adm0.to_dict(orient='records')
+                                        'population': merged_population_adm0.to_dict(orient='records')
                                     }
+                                    if economic_data_available:
+                                        dict_event['peak_economic'] = {
+                                            'day': dict_event['total_days_event'],
+                                            'economic': merged_economic_adm0.to_dict(orient='records')
+                                        }
                                     dict_event['stats'] = stats
-                                    dict_event['adm0_max'] = merged_adm0.to_dict(orient='records')
-                                    dict_event['adm1_max'] = merged_adm1.to_dict(orient='records')
-                                    dict_event['adm2_max'] = merged_adm2.to_dict(orient='records')
+                                    dict_event['adm0_max'] = merged_population_adm0.to_dict(orient='records')
+                                    dict_event['adm1_max'] = merged_population_adm1.to_dict(orient='records')
+                                    dict_event['adm2_max'] = merged_population_adm2.to_dict(orient='records')
+                                    if economic_data_available:
+                                        dict_event['adm0_eco_max'] = merged_economic_adm0.to_dict(orient='records')
+                                        dict_event['adm1_eco_max'] = merged_economic_adm1.to_dict(orient='records')
+                                        dict_event['adm2_eco_max'] = merged_economic_adm2.to_dict(orient='records')
                                 else:
                                     # update the stats of the event: take the maximum value of each stat
                                     for stat in dict_event['stats']:
@@ -619,16 +655,19 @@ def process_pipeline(
                                         }
 
 
-                                    # dict_event['adm0_max'] = np.maximum(merged_adm0, pd.DataFrame.from_records(dict_event['adm0_max'])).to_dict(orient='records')
-                                    # dict_event['adm1_max'] = np.maximum(merged_adm1, pd.DataFrame.from_records(dict_event['adm1_max'])).to_dict(orient='records')
-                                    # if merged_adm2.shape != pd.DataFrame.from_records(dict_event['adm2_max']).shape:
-                                    #     raise Exception('adm2 shape is different from adm1 shape')
-                                    # else:
-                                    #     dict_event['adm2_max'] = np.maximum(merged_adm2, pd.DataFrame.from_records(dict_event['adm2_max'])).to_dict(orient='records')
+                                    dict_event['adm0_max'] = find_maximum_values(merged_population_adm0, pd.DataFrame.from_records(dict_event['adm0_max'])).to_dict(orient='records')
+                                    dict_event['adm1_max'] = find_maximum_values(merged_population_adm1, pd.DataFrame.from_records(dict_event['adm1_max'])).to_dict(orient='records')
+                                    dict_event['adm2_max'] = find_maximum_values(merged_population_adm2, pd.DataFrame.from_records(dict_event['adm2_max'])).to_dict(orient='records')
 
-                                    dict_event['adm0_max'] = find_maximum_values(merged_adm0, pd.DataFrame.from_records(dict_event['adm0_max'])).to_dict(orient='records')
-                                    dict_event['adm1_max'] = find_maximum_values(merged_adm1, pd.DataFrame.from_records(dict_event['adm1_max'])).to_dict(orient='records')
-                                    dict_event['adm2_max'] = find_maximum_values(merged_adm2, pd.DataFrame.from_records(dict_event['adm2_max'])).to_dict(orient='records')
+                                    if economic_data_available:
+                                        if 'adm0_eco_max' not in dict_event.keys():
+                                            dict_event['adm0_eco_max'] = merged_economic_adm0.to_dict(orient='records')
+                                            dict_event['adm1_eco_max'] = merged_economic_adm1.to_dict(orient='records')
+                                            dict_event['adm2_eco_max'] = merged_economic_adm2.to_dict(orient='records')
+                                        else:
+                                            dict_event['adm0_eco_max'] = find_maximum_values(merged_economic_adm0, pd.DataFrame.from_records(dict_event['adm0_eco_max'])).to_dict(orient='records')
+                                            dict_event['adm1_eco_max'] = find_maximum_values(merged_economic_adm1, pd.DataFrame.from_records(dict_event['adm1_eco_max'])).to_dict(orient='records')
+                                            dict_event['adm2_eco_max'] = find_maximum_values(merged_economic_adm2, pd.DataFrame.from_records(dict_event['adm2_eco_max'])).to_dict(orient='records')
 
 
                                 dict_event = save_json_last_edit(
