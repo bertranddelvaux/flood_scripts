@@ -651,6 +651,7 @@ def process_pipeline(
                                             'day': dict_event['total_days_event'],
                                             'stats': stats
                                         }
+                                        dict_event['stats']['severity_index_1m'] = stats['severity_index_1m']
                                     # if the sum of the numerical values of adm0 is greater than the previous peak
                                     if sum_list_dict(adm0) > sum_list_dict(dict_event['peak_population']['population']) : #TODO!!!!!!!
                                         dict_event['peak_population'] = {
