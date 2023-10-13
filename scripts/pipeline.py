@@ -243,9 +243,9 @@ def process_pipeline(
                     csv_files = [os.path.join(folder_path, f) for f in os.listdir(folder_path) if
                                 f'rd{year}{month}{day}' in f and f.endswith('.csv') and not f.endswith(
                                     '_processed.csv')]
+                    economic_data_available = False
                     for csv_file in csv_files:
                         print(f'\t\tProcessing {csv_file} ... ', end='')
-                        economic_data_available = False
                         if 'population' in csv_file:
                             merged_population_adm0, merged_population_adm1, merged_population_adm2, df_grouped_population = csv2geojson(
                                 csv_file=csv_file,
