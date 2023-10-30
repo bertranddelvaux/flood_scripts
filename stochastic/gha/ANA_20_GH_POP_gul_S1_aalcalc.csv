@@ -1,0 +1,3 @@
+countrycode,type,loss,standard_deviation,exposure_value
+GH,1_analytic_mean,122961.23801700001,154901.360708,2208928.25
+GH,2_sample_mean,122961.23801700001,154901.360708,2208928.25

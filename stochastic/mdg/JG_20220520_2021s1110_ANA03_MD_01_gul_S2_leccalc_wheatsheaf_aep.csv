@@ -1,0 +1,287 @@
+geogname1,sidx,return_period,loss
+Alaotra Mangoro,Sample1,2,0.0
+Alaotra Mangoro,Sample1,5,3646.230225
+Alaotra Mangoro,Sample1,10,13502.636719
+Alaotra Mangoro,Sample1,15,22963.285156
+Alaotra Mangoro,Sample1,20,28379.587891
+Alaotra Mangoro,Sample1,50,46225.242188
+Alaotra Mangoro,Sample1,75,53048.476562
+Alaotra Mangoro,Sample1,100,56190.402344
+Alaotra Mangoro,Sample1,200,66072.5
+Alaotra Mangoro,Sample1,250,70026.609375
+Alaotra Mangoro,Sample1,500,84305.726562
+Alaotra Mangoro,Sample1,750,89683.5
+Alaotra Mangoro,Sample1,1000,97918.867188
+Amoron'i Mania,Sample1,2,0.0
+Amoron'i Mania,Sample1,5,97.265991
+Amoron'i Mania,Sample1,10,1900.432495
+Amoron'i Mania,Sample1,15,2433.312256
+Amoron'i Mania,Sample1,20,4169.961914
+Amoron'i Mania,Sample1,50,6653.991699
+Amoron'i Mania,Sample1,75,7182.693848
+Amoron'i Mania,Sample1,100,7489.483398
+Amoron'i Mania,Sample1,200,8305.027344
+Amoron'i Mania,Sample1,250,8691.608398
+Amoron'i Mania,Sample1,500,9933.657227
+Amoron'i Mania,Sample1,750,10973.296875
+Amoron'i Mania,Sample1,1000,11582.132812
+Analamanga,Sample1,2,0.0
+Analamanga,Sample1,5,266.858154
+Analamanga,Sample1,10,11051.992188
+Analamanga,Sample1,15,69024.1875
+Analamanga,Sample1,20,72328.265625
+Analamanga,Sample1,50,95653.46875
+Analamanga,Sample1,75,103989.023438
+Analamanga,Sample1,100,107361.578125
+Analamanga,Sample1,200,120772.109375
+Analamanga,Sample1,250,126084.867188
+Analamanga,Sample1,500,142667.890625
+Analamanga,Sample1,750,153881.71875
+Analamanga,Sample1,1000,160688.6875
+Analanjirofo,Sample1,2,0.0
+Analanjirofo,Sample1,5,10549.655273
+Analanjirofo,Sample1,10,30788.634766
+Analanjirofo,Sample1,15,43121.683594
+Analanjirofo,Sample1,20,53039.226562
+Analanjirofo,Sample1,50,90052.359375
+Analanjirofo,Sample1,75,106899.09375
+Analanjirofo,Sample1,100,115697.070312
+Analanjirofo,Sample1,200,135302.171875
+Analanjirofo,Sample1,250,143338.9375
+Analanjirofo,Sample1,500,159631.3125
+Analanjirofo,Sample1,750,177410.59375
+Analanjirofo,Sample1,1000,181791.46875
+Androy,Sample1,2,0.0
+Androy,Sample1,5,194.532013
+Androy,Sample1,10,1543.786255
+Androy,Sample1,15,2312.769287
+Androy,Sample1,20,2743.401611
+Androy,Sample1,50,4204.884766
+Androy,Sample1,75,4846.652832
+Androy,Sample1,100,5267.32373
+Androy,Sample1,200,6384.632812
+Androy,Sample1,250,6776.191895
+Androy,Sample1,500,8364.874023
+Androy,Sample1,750,11554.626953
+Androy,Sample1,1000,13761.96582
+Anosy,Sample1,2,0.0
+Anosy,Sample1,5,850.454529
+Anosy,Sample1,10,3326.988525
+Anosy,Sample1,15,4556.528809
+Anosy,Sample1,20,5903.293457
+Anosy,Sample1,50,8048.140625
+Anosy,Sample1,75,9226.924805
+Anosy,Sample1,100,10115.706055
+Anosy,Sample1,200,12537.442383
+Anosy,Sample1,250,13158.439453
+Anosy,Sample1,500,16345.833984
+Anosy,Sample1,750,19940.175781
+Anosy,Sample1,1000,21268.914062
+Atsimo Andrefana,Sample1,2,47.385998
+Atsimo Andrefana,Sample1,5,1027.527832
+Atsimo Andrefana,Sample1,10,9726.626953
+Atsimo Andrefana,Sample1,15,15806.163086
+Atsimo Andrefana,Sample1,20,20108.074219
+Atsimo Andrefana,Sample1,50,35591.117188
+Atsimo Andrefana,Sample1,75,42040.808594
+Atsimo Andrefana,Sample1,100,46403.886719
+Atsimo Andrefana,Sample1,200,54357.976562
+Atsimo Andrefana,Sample1,250,57307.03125
+Atsimo Andrefana,Sample1,500,63056.832031
+Atsimo Andrefana,Sample1,750,65042.992188
+Atsimo Andrefana,Sample1,1000,66584.78125
+Atsimo Atsinanana,Sample1,2,0.0
+Atsimo Atsinanana,Sample1,5,2444.12085
+Atsimo Atsinanana,Sample1,10,4875.76416
+Atsimo Atsinanana,Sample1,15,6893.424316
+Atsimo Atsinanana,Sample1,20,8965.946289
+Atsimo Atsinanana,Sample1,50,13896.742188
+Atsimo Atsinanana,Sample1,75,16648.351562
+Atsimo Atsinanana,Sample1,100,18825.033203
+Atsimo Atsinanana,Sample1,200,21768.03125
+Atsimo Atsinanana,Sample1,250,23553.705078
+Atsimo Atsinanana,Sample1,500,28170.277344
+Atsimo Atsinanana,Sample1,750,30054.267578
+Atsimo Atsinanana,Sample1,1000,32415.019531
+Atsinanana,Sample1,2,0.0
+Atsinanana,Sample1,5,6312.322754
+Atsinanana,Sample1,10,34435.453125
+Atsinanana,Sample1,15,57623.355469
+Atsinanana,Sample1,20,72237.351562
+Atsinanana,Sample1,50,93877.25
+Atsinanana,Sample1,75,103476.679688
+Atsinanana,Sample1,100,110207.492188
+Atsinanana,Sample1,200,123748.0625
+Atsinanana,Sample1,250,129535.179688
+Atsinanana,Sample1,500,147828.796875
+Atsinanana,Sample1,750,154689.671875
+Atsinanana,Sample1,1000,164523.03125
+Betsiboka,Sample1,2,0.0
+Betsiboka,Sample1,5,621.00592
+Betsiboka,Sample1,10,12933.930664
+Betsiboka,Sample1,15,14113.598633
+Betsiboka,Sample1,20,14949.073242
+Betsiboka,Sample1,50,26680.933594
+Betsiboka,Sample1,75,27681.044922
+Betsiboka,Sample1,100,28494.101562
+Betsiboka,Sample1,200,30406.998047
+Betsiboka,Sample1,250,32192.677734
+Betsiboka,Sample1,500,35060.785156
+Betsiboka,Sample1,750,42041.03125
+Betsiboka,Sample1,1000,42789.730469
+Boeny,Sample1,2,0.0
+Boeny,Sample1,5,1678.462769
+Boeny,Sample1,10,12612.921875
+Boeny,Sample1,15,24572.207031
+Boeny,Sample1,20,31900.970703
+Boeny,Sample1,50,62998.875
+Boeny,Sample1,75,70737.210938
+Boeny,Sample1,100,73541.03125
+Boeny,Sample1,200,83616.515625
+Boeny,Sample1,250,87363.9375
+Boeny,Sample1,500,107735.179688
+Boeny,Sample1,750,116380.28125
+Boeny,Sample1,1000,122811.65625
+Bongolava,Sample1,2,0.0
+Bongolava,Sample1,5,107.242004
+Bongolava,Sample1,10,496.305817
+Bongolava,Sample1,15,803.067871
+Bongolava,Sample1,20,1007.575867
+Bongolava,Sample1,50,1631.078247
+Bongolava,Sample1,75,1837.245483
+Bongolava,Sample1,100,1972.757568
+Bongolava,Sample1,200,2316.927979
+Bongolava,Sample1,250,2404.217773
+Bongolava,Sample1,500,2683.546631
+Bongolava,Sample1,750,2864.611084
+Bongolava,Sample1,1000,3212.275391
+Diana,Sample1,2,0.0
+Diana,Sample1,5,1330.347046
+Diana,Sample1,10,5591.547852
+Diana,Sample1,15,8941.980469
+Diana,Sample1,20,12221.583984
+Diana,Sample1,50,27593.794922
+Diana,Sample1,75,34350.566406
+Diana,Sample1,100,37686.519531
+Diana,Sample1,200,44602.355469
+Diana,Sample1,250,46542.800781
+Diana,Sample1,500,58600.578125
+Diana,Sample1,750,63764.65625
+Diana,Sample1,1000,65939.570312
+Haute Matsiatra,Sample1,2,0.0
+Haute Matsiatra,Sample1,5,399.039978
+Haute Matsiatra,Sample1,10,1798.061523
+Haute Matsiatra,Sample1,15,3648.83374
+Haute Matsiatra,Sample1,20,4668.180176
+Haute Matsiatra,Sample1,50,6578.595215
+Haute Matsiatra,Sample1,75,7440.398438
+Haute Matsiatra,Sample1,100,7777.344238
+Haute Matsiatra,Sample1,200,8822.46582
+Haute Matsiatra,Sample1,250,9326.25293
+Haute Matsiatra,Sample1,500,11412.915039
+Haute Matsiatra,Sample1,750,13510.951172
+Haute Matsiatra,Sample1,1000,16151.514648
+Ihorombe,Sample1,2,0.0
+Ihorombe,Sample1,5,406.521912
+Ihorombe,Sample1,10,1528.822998
+Ihorombe,Sample1,15,3073.429932
+Ihorombe,Sample1,20,4242.286621
+Ihorombe,Sample1,50,7304.930176
+Ihorombe,Sample1,75,8388.143555
+Ihorombe,Sample1,100,8848.740234
+Ihorombe,Sample1,200,9983.521484
+Ihorombe,Sample1,250,10300.257812
+Ihorombe,Sample1,500,11312.828125
+Ihorombe,Sample1,750,12332.511719
+Ihorombe,Sample1,1000,12430.158203
+Itasy,Sample1,2,0.0
+Itasy,Sample1,5,17.458
+Itasy,Sample1,10,531.221863
+Itasy,Sample1,15,1269.446411
+Itasy,Sample1,20,1962.779541
+Itasy,Sample1,50,3060.135254
+Itasy,Sample1,75,3299.559082
+Itasy,Sample1,100,3541.475098
+Itasy,Sample1,200,4050.248291
+Itasy,Sample1,250,4202.381348
+Itasy,Sample1,500,4466.748535
+Itasy,Sample1,750,4792.967773
+Itasy,Sample1,1000,5060.326172
+Melaky,Sample1,2,0.0
+Melaky,Sample1,5,678.367798
+Melaky,Sample1,10,3277.110107
+Melaky,Sample1,15,4913.175293
+Melaky,Sample1,20,5584.064941
+Melaky,Sample1,50,7688.992676
+Melaky,Sample1,75,8523.655273
+Melaky,Sample1,100,9118.060547
+Melaky,Sample1,200,10587.013672
+Melaky,Sample1,250,11188.075195
+Melaky,Sample1,500,12484.97168
+Melaky,Sample1,750,13231.423828
+Melaky,Sample1,1000,13529.946289
+Menabe,Sample1,2,0.0
+Menabe,Sample1,5,2359.32251
+Menabe,Sample1,10,9379.923828
+Menabe,Sample1,15,15397.936523
+Menabe,Sample1,20,17271.017578
+Menabe,Sample1,50,29930.722656
+Menabe,Sample1,75,36713.558594
+Menabe,Sample1,100,38225.0
+Menabe,Sample1,200,41176.1875
+Menabe,Sample1,250,42380.84375
+Menabe,Sample1,500,43747.292969
+Menabe,Sample1,750,44912.90625
+Menabe,Sample1,1000,46500.964844
+Sava,Sample1,2,0.0
+Sava,Sample1,5,11472.425781
+Sava,Sample1,10,37774.199219
+Sava,Sample1,15,61167.03125
+Sava,Sample1,20,68226.046875
+Sava,Sample1,50,108624.875
+Sava,Sample1,75,134779.59375
+Sava,Sample1,100,156458.65625
+Sava,Sample1,200,194382.109375
+Sava,Sample1,250,201655.875
+Sava,Sample1,500,243143.78125
+Sava,Sample1,750,283631.78125
+Sava,Sample1,1000,304944.8125
+Sofia,Sample1,2,518.751831
+Sofia,Sample1,5,9180.427734
+Sofia,Sample1,10,23197.113281
+Sofia,Sample1,15,32977.648438
+Sofia,Sample1,20,44916.886719
+Sofia,Sample1,50,95275.84375
+Sofia,Sample1,75,116666.242188
+Sofia,Sample1,100,130688.109375
+Sofia,Sample1,200,155347.40625
+Sofia,Sample1,250,160998.953125
+Sofia,Sample1,500,170453.03125
+Sofia,Sample1,750,182450.6875
+Sofia,Sample1,1000,184435.21875
+Vakinankaratra,Sample1,2,0.0
+Vakinankaratra,Sample1,5,331.702026
+Vakinankaratra,Sample1,10,2668.575928
+Vakinankaratra,Sample1,15,5384.542969
+Vakinankaratra,Sample1,20,6406.621094
+Vakinankaratra,Sample1,50,11717.098633
+Vakinankaratra,Sample1,75,13748.707031
+Vakinankaratra,Sample1,100,14918.697266
+Vakinankaratra,Sample1,200,17254.222656
+Vakinankaratra,Sample1,250,18045.716797
+Vakinankaratra,Sample1,500,20279.785156
+Vakinankaratra,Sample1,750,21074.683594
+Vakinankaratra,Sample1,1000,22042.839844
+Vatovavy Fitovinany,Sample1,2,0.0
+Vatovavy Fitovinany,Sample1,5,5372.058594
+Vatovavy Fitovinany,Sample1,10,24439.015625
+Vatovavy Fitovinany,Sample1,15,31828.066406
+Vatovavy Fitovinany,Sample1,20,38504.25
+Vatovavy Fitovinany,Sample1,50,66648.414062
+Vatovavy Fitovinany,Sample1,75,79894.421875
+Vatovavy Fitovinany,Sample1,100,89125.195312
+Vatovavy Fitovinany,Sample1,200,113971.296875
+Vatovavy Fitovinany,Sample1,250,120591.78125
+Vatovavy Fitovinany,Sample1,500,139931.5625
+Vatovavy Fitovinany,Sample1,750,149995.0
+Vatovavy Fitovinany,Sample1,1000,157063.75

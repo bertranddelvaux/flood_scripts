@@ -1,0 +1,9 @@
+geogname1,type,loss,standard_deviation
+Northern Region,1_analytic_mean,7154.473049,12057.688507
+Area under National Administration,1_analytic_mean,465.440713,931.135286
+Central Region,1_analytic_mean,11742.748961,19764.782465
+Southern Region,1_analytic_mean,44597.892432,72177.915431
+Northern Region,2_sample_mean,7154.473049,12057.688507
+Area under National Administration,2_sample_mean,465.440713,931.135286
+Central Region,2_sample_mean,11742.748961,19764.782465
+Southern Region,2_sample_mean,44597.892432,72177.915431

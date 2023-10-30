@@ -1,0 +1,3 @@
+countrycode,type,loss,standard_deviation,exposure_value
+CI,1_analytic_mean,110183.674773,154950.705151,1393866.125
+CI,2_sample_mean,110183.674773,154950.705151,1393866.125

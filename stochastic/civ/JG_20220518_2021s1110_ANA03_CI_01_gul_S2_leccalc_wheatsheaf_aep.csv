@@ -1,0 +1,183 @@
+geogname1,sidx,return_period,loss
+Autonome d' Abidjan,Sample1,2,9.486
+Autonome d' Abidjan,Sample1,5,531.960022
+Autonome d' Abidjan,Sample1,10,101840.695312
+Autonome d' Abidjan,Sample1,15,102004.0
+Autonome d' Abidjan,Sample1,20,123140.007812
+Autonome d' Abidjan,Sample1,50,175247.625
+Autonome d' Abidjan,Sample1,75,176628.109375
+Autonome d' Abidjan,Sample1,100,219510.34375
+Autonome d' Abidjan,Sample1,200,232381.421875
+Autonome d' Abidjan,Sample1,250,237592.5625
+Autonome d' Abidjan,Sample1,500,388133.71875
+Autonome d' Abidjan,Sample1,750,388159.9375
+Autonome d' Abidjan,Sample1,1000,666979.5
+Autonome de Yamoussoukro,Sample1,2,0.0
+Autonome de Yamoussoukro,Sample1,5,803.147949
+Autonome de Yamoussoukro,Sample1,10,2303.300049
+Autonome de Yamoussoukro,Sample1,15,3510.871826
+Autonome de Yamoussoukro,Sample1,20,3921.624023
+Autonome de Yamoussoukro,Sample1,50,5934.279297
+Autonome de Yamoussoukro,Sample1,75,6854.420898
+Autonome de Yamoussoukro,Sample1,100,7844.504883
+Autonome de Yamoussoukro,Sample1,200,9110.120117
+Autonome de Yamoussoukro,Sample1,250,10084.024414
+Autonome de Yamoussoukro,Sample1,500,13414.279297
+Autonome de Yamoussoukro,Sample1,750,14132.842773
+Autonome de Yamoussoukro,Sample1,1000,20877.046875
+Bas-Sassandra,Sample1,2,1052.945435
+Bas-Sassandra,Sample1,5,13793.432617
+Bas-Sassandra,Sample1,10,48802.105469
+Bas-Sassandra,Sample1,15,145975.234375
+Bas-Sassandra,Sample1,20,151319.046875
+Bas-Sassandra,Sample1,50,181119.484375
+Bas-Sassandra,Sample1,75,196893.28125
+Bas-Sassandra,Sample1,100,209905.453125
+Bas-Sassandra,Sample1,200,302812.0
+Bas-Sassandra,Sample1,250,308269.5625
+Bas-Sassandra,Sample1,500,331116.25
+Bas-Sassandra,Sample1,750,333693.125
+Bas-Sassandra,Sample1,1000,338172.6875
+Comoé,Sample1,2,467.975983
+Comoé,Sample1,5,18798.146484
+Comoé,Sample1,10,49329.167969
+Comoé,Sample1,15,64721.820312
+Comoé,Sample1,20,73456.4375
+Comoé,Sample1,50,99138.492188
+Comoé,Sample1,75,109691.070312
+Comoé,Sample1,100,115130.125
+Comoé,Sample1,200,132574.765625
+Comoé,Sample1,250,144433.234375
+Comoé,Sample1,500,155978.921875
+Comoé,Sample1,750,171826.796875
+Comoé,Sample1,1000,187853.671875
+Denguélé,Sample1,2,9.486
+Denguélé,Sample1,5,838.85907
+Denguélé,Sample1,10,1749.513916
+Denguélé,Sample1,15,3124.058594
+Denguélé,Sample1,20,3696.382324
+Denguélé,Sample1,50,4335.106934
+Denguélé,Sample1,75,4631.278809
+Denguélé,Sample1,100,4815.73291
+Denguélé,Sample1,200,5223.633789
+Denguélé,Sample1,250,5394.382324
+Denguélé,Sample1,500,9196.24707
+Denguélé,Sample1,750,9984.857422
+Denguélé,Sample1,1000,10279.400391
+Gôh-Djiboua,Sample1,2,12.648
+Gôh-Djiboua,Sample1,5,2338.76416
+Gôh-Djiboua,Sample1,10,7633.834961
+Gôh-Djiboua,Sample1,15,15919.071289
+Gôh-Djiboua,Sample1,20,21668.15625
+Gôh-Djiboua,Sample1,50,32096.318359
+Gôh-Djiboua,Sample1,75,36225.980469
+Gôh-Djiboua,Sample1,100,38413.132812
+Gôh-Djiboua,Sample1,200,46396.617188
+Gôh-Djiboua,Sample1,250,49202.101562
+Gôh-Djiboua,Sample1,500,64819.488281
+Gôh-Djiboua,Sample1,750,73545.664062
+Gôh-Djiboua,Sample1,1000,75590.484375
+Lacs,Sample1,2,1941.467285
+Lacs,Sample1,5,9027.517578
+Lacs,Sample1,10,24613.095703
+Lacs,Sample1,15,30954.039062
+Lacs,Sample1,20,34557.65625
+Lacs,Sample1,50,43853.320312
+Lacs,Sample1,75,44919.816406
+Lacs,Sample1,100,45589.15625
+Lacs,Sample1,200,47827.859375
+Lacs,Sample1,250,48681.601562
+Lacs,Sample1,500,52267.414062
+Lacs,Sample1,750,55396.308594
+Lacs,Sample1,1000,56653.046875
+Lagunes,Sample1,2,869.549072
+Lagunes,Sample1,5,15762.598633
+Lagunes,Sample1,10,49993.90625
+Lagunes,Sample1,15,60703.402344
+Lagunes,Sample1,20,63602.933594
+Lagunes,Sample1,50,95451.554688
+Lagunes,Sample1,75,116231.6875
+Lagunes,Sample1,100,121727.59375
+Lagunes,Sample1,200,134394.1875
+Lagunes,Sample1,250,139459.40625
+Lagunes,Sample1,500,149667.3125
+Lagunes,Sample1,750,155781.28125
+Lagunes,Sample1,1000,161885.0625
+Montagnes,Sample1,2,1315.391602
+Montagnes,Sample1,5,12568.226562
+Montagnes,Sample1,10,47295.460938
+Montagnes,Sample1,15,62789.574219
+Montagnes,Sample1,20,89161.453125
+Montagnes,Sample1,50,113349.09375
+Montagnes,Sample1,75,122098.015625
+Montagnes,Sample1,100,128495.242188
+Montagnes,Sample1,200,142129.953125
+Montagnes,Sample1,250,144182.40625
+Montagnes,Sample1,500,159739.140625
+Montagnes,Sample1,750,167231.9375
+Montagnes,Sample1,1000,193657.515625
+Sassandra-Marahoué,Sample1,2,417.383911
+Sassandra-Marahoué,Sample1,5,7800.011719
+Sassandra-Marahoué,Sample1,10,35704.507812
+Sassandra-Marahoué,Sample1,15,41916.402344
+Sassandra-Marahoué,Sample1,20,47913.34375
+Sassandra-Marahoué,Sample1,50,73045.34375
+Sassandra-Marahoué,Sample1,75,81043.914062
+Sassandra-Marahoué,Sample1,100,85103.132812
+Sassandra-Marahoué,Sample1,200,98747.609375
+Sassandra-Marahoué,Sample1,250,102171.960938
+Sassandra-Marahoué,Sample1,500,116967.8125
+Sassandra-Marahoué,Sample1,750,129520.359375
+Sassandra-Marahoué,Sample1,1000,156181.296875
+Savanes,Sample1,2,1277.447021
+Savanes,Sample1,5,9403.84375
+Savanes,Sample1,10,17894.134766
+Savanes,Sample1,15,23219.904297
+Savanes,Sample1,20,26206.193359
+Savanes,Sample1,50,37035.617188
+Savanes,Sample1,75,40530.875
+Savanes,Sample1,100,45043.074219
+Savanes,Sample1,200,56447.710938
+Savanes,Sample1,250,63773.34375
+Savanes,Sample1,500,96234.125
+Savanes,Sample1,750,128258.164062
+Savanes,Sample1,1000,135916.265625
+Vallée du Bandama,Sample1,2,1068.755859
+Vallée du Bandama,Sample1,5,5523.896484
+Vallée du Bandama,Sample1,10,11823.574219
+Vallée du Bandama,Sample1,15,17513.791016
+Vallée du Bandama,Sample1,20,25141.148438
+Vallée du Bandama,Sample1,50,38566.273438
+Vallée du Bandama,Sample1,75,43229.757812
+Vallée du Bandama,Sample1,100,46577.40625
+Vallée du Bandama,Sample1,200,54036.835938
+Vallée du Bandama,Sample1,250,55575.203125
+Vallée du Bandama,Sample1,500,63450.148438
+Vallée du Bandama,Sample1,750,66826.65625
+Vallée du Bandama,Sample1,1000,67977.859375
+Woroba,Sample1,2,638.723816
+Woroba,Sample1,5,4350.914062
+Woroba,Sample1,10,6959.576172
+Woroba,Sample1,15,8659.691406
+Woroba,Sample1,20,10867.856445
+Woroba,Sample1,50,25697.798828
+Woroba,Sample1,75,28267.349609
+Woroba,Sample1,100,29843.169922
+Woroba,Sample1,200,33539.589844
+Woroba,Sample1,250,34181.460938
+Woroba,Sample1,500,38671.503906
+Woroba,Sample1,750,41388.734375
+Woroba,Sample1,1000,43252.847656
+Zanzan,Sample1,2,872.711914
+Zanzan,Sample1,5,6090.03125
+Zanzan,Sample1,10,10232.244141
+Zanzan,Sample1,15,12556.335938
+Zanzan,Sample1,20,13590.313477
+Zanzan,Sample1,50,29006.052734
+Zanzan,Sample1,75,31208.761719
+Zanzan,Sample1,100,32370.429688
+Zanzan,Sample1,200,35205.308594
+Zanzan,Sample1,250,36406.855469
+Zanzan,Sample1,500,38967.945312
+Zanzan,Sample1,750,41067.808594
+Zanzan,Sample1,1000,42095.007812

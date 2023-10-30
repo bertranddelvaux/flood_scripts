@@ -1,0 +1,53 @@
+geogname1,sidx,return_period,loss
+Area under National Administration,Sample1,2,0.0
+Area under National Administration,Sample1,5,438.236328
+Area under National Administration,Sample1,10,784.979919
+Area under National Administration,Sample1,15,1485.744507
+Area under National Administration,Sample1,20,2090.338379
+Area under National Administration,Sample1,50,2661.433594
+Area under National Administration,Sample1,75,2845.166992
+Area under National Administration,Sample1,100,3003.210693
+Area under National Administration,Sample1,200,3622.813965
+Area under National Administration,Sample1,250,3805.82959
+Area under National Administration,Sample1,500,4233.595703
+Area under National Administration,Sample1,750,4363.584473
+Area under National Administration,Sample1,1000,4641.521973
+Central Region,Sample1,2,154.702805
+Central Region,Sample1,5,8308.982422
+Central Region,Sample1,10,18186.966797
+Central Region,Sample1,15,24524.554688
+Central Region,Sample1,20,28787.841797
+Central Region,Sample1,50,39997.386719
+Central Region,Sample1,75,45179.363281
+Central Region,Sample1,100,48250.0
+Central Region,Sample1,200,54150.976562
+Central Region,Sample1,250,56167.890625
+Central Region,Sample1,500,63253.726562
+Central Region,Sample1,750,66606.3125
+Central Region,Sample1,1000,68344.859375
+Northern Region,Sample1,2,72.764992
+Northern Region,Sample1,5,4392.354492
+Northern Region,Sample1,10,13232.272461
+Northern Region,Sample1,15,17192.609375
+Northern Region,Sample1,20,19689.845703
+Northern Region,Sample1,50,24216.296875
+Northern Region,Sample1,75,25678.533203
+Northern Region,Sample1,100,26539.277344
+Northern Region,Sample1,200,28947.720703
+Northern Region,Sample1,250,29895.941406
+Northern Region,Sample1,500,31668.167969
+Northern Region,Sample1,750,34287.882812
+Northern Region,Sample1,1000,35280.261719
+Southern Region,Sample1,2,132.300003
+Southern Region,Sample1,5,26106.464844
+Southern Region,Sample1,10,77685.039062
+Southern Region,Sample1,15,103009.9375
+Southern Region,Sample1,20,114302.6875
+Southern Region,Sample1,50,148928.4375
+Southern Region,Sample1,75,161291.4375
+Southern Region,Sample1,100,168455.890625
+Southern Region,Sample1,200,184430.703125
+Southern Region,Sample1,250,188207.0
+Southern Region,Sample1,500,199478.3125
+Southern Region,Sample1,750,210952.078125
+Southern Region,Sample1,1000,217258.296875

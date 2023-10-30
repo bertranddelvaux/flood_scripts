@@ -1,0 +1,144 @@
+geogname1,sidx,return_period,loss
+Cabo Delgado,Sample1,1000.0,117068.875
+Cabo Delgado,Sample1,750.0,109326.0
+Cabo Delgado,Sample1,500.0,101191.984375
+Cabo Delgado,Sample1,250.0,90971.640625
+Cabo Delgado,Sample1,200.0,88595.65625
+Cabo Delgado,Sample1,100.0,79650.375
+Cabo Delgado,Sample1,75.0,74352.585938
+Cabo Delgado,Sample1,50.0,68677.171875
+Cabo Delgado,Sample1,20.0,40076.289062
+Cabo Delgado,Sample1,15.0,36194.71875
+Cabo Delgado,Sample1,10.0,28664.939453
+Cabo Delgado,Sample1,5.0,12897.067383
+Cabo Delgado,Sample1,2.0,2716.208008
+Cidade de Maputo,Sample1,1000.0,162401.484375
+Cidade de Maputo,Sample1,750.0,133666.0625
+Cidade de Maputo,Sample1,500.0,112898.859375
+Cidade de Maputo,Sample1,250.0,96506.875
+Cidade de Maputo,Sample1,200.0,86494.945312
+Cidade de Maputo,Sample1,100.0,68974.585938
+Cidade de Maputo,Sample1,75.0,58104.597656
+Cidade de Maputo,Sample1,50.0,54732.433594
+Cidade de Maputo,Sample1,20.0,37656.515625
+Cidade de Maputo,Sample1,15.0,36469.757812
+Cidade de Maputo,Sample1,10.0,26412.083984
+Cidade de Maputo,Sample1,5.0,0.0
+Cidade de Maputo,Sample1,2.0,0.0
+Gaza,Sample1,1000.0,311984.53125
+Gaza,Sample1,750.0,308305.09375
+Gaza,Sample1,500.0,301506.4375
+Gaza,Sample1,250.0,293522.53125
+Gaza,Sample1,200.0,292621.65625
+Gaza,Sample1,100.0,284342.0625
+Gaza,Sample1,75.0,281822.0625
+Gaza,Sample1,50.0,275074.5625
+Gaza,Sample1,20.0,226337.953125
+Gaza,Sample1,15.0,155263.765625
+Gaza,Sample1,10.0,116065.203125
+Gaza,Sample1,5.0,12739.150391
+Gaza,Sample1,2.0,46.551994
+Inhambane,Sample1,1000.0,293271.5625
+Inhambane,Sample1,750.0,261407.03125
+Inhambane,Sample1,500.0,248065.03125
+Inhambane,Sample1,250.0,199475.765625
+Inhambane,Sample1,200.0,192912.578125
+Inhambane,Sample1,100.0,163633.390625
+Inhambane,Sample1,75.0,153029.21875
+Inhambane,Sample1,50.0,142611.9375
+Inhambane,Sample1,20.0,112160.773438
+Inhambane,Sample1,15.0,101723.179688
+Inhambane,Sample1,10.0,83562.78125
+Inhambane,Sample1,5.0,40091.550781
+Inhambane,Sample1,2.0,985.68634
+Manica,Sample1,1000.0,88783.679688
+Manica,Sample1,750.0,84233.851562
+Manica,Sample1,500.0,80959.132812
+Manica,Sample1,250.0,71588.609375
+Manica,Sample1,200.0,67467.804688
+Manica,Sample1,100.0,60120.972656
+Manica,Sample1,75.0,55720.914062
+Manica,Sample1,50.0,50622.851562
+Manica,Sample1,20.0,35761.085938
+Manica,Sample1,15.0,30366.763672
+Manica,Sample1,10.0,24595.699219
+Manica,Sample1,5.0,14352.1875
+Manica,Sample1,2.0,835.911682
+Maputo,Sample1,1000.0,337323.625
+Maputo,Sample1,750.0,281892.21875
+Maputo,Sample1,500.0,229331.546875
+Maputo,Sample1,250.0,195736.875
+Maputo,Sample1,200.0,188176.40625
+Maputo,Sample1,100.0,158067.078125
+Maputo,Sample1,75.0,146052.140625
+Maputo,Sample1,50.0,132379.75
+Maputo,Sample1,20.0,90101.195312
+Maputo,Sample1,15.0,60887.480469
+Maputo,Sample1,10.0,45903.398438
+Maputo,Sample1,5.0,13495.939453
+Maputo,Sample1,2.0,8.096
+Nampula,Sample1,1000.0,248547.484375
+Nampula,Sample1,750.0,243601.65625
+Nampula,Sample1,500.0,222088.265625
+Nampula,Sample1,250.0,194002.03125
+Nampula,Sample1,200.0,183515.765625
+Nampula,Sample1,100.0,143669.5625
+Nampula,Sample1,75.0,125682.8125
+Nampula,Sample1,50.0,104698.78125
+Nampula,Sample1,20.0,59376.039062
+Nampula,Sample1,15.0,50770.796875
+Nampula,Sample1,10.0,39648.097656
+Nampula,Sample1,5.0,23028.464844
+Nampula,Sample1,2.0,4064.188965
+Niassa,Sample1,1000.0,67742.164062
+Niassa,Sample1,750.0,64469.511719
+Niassa,Sample1,500.0,61499.09375
+Niassa,Sample1,250.0,58189.296875
+Niassa,Sample1,200.0,57310.726562
+Niassa,Sample1,100.0,53155.152344
+Niassa,Sample1,75.0,49860.449219
+Niassa,Sample1,50.0,46365.855469
+Niassa,Sample1,20.0,36310.125
+Niassa,Sample1,15.0,30794.886719
+Niassa,Sample1,10.0,21834.505859
+Niassa,Sample1,5.0,11494.392578
+Niassa,Sample1,2.0,2574.527588
+Sofala,Sample1,1000.0,370954.09375
+Sofala,Sample1,750.0,362169.40625
+Sofala,Sample1,500.0,345227.65625
+Sofala,Sample1,250.0,305381.0
+Sofala,Sample1,200.0,298900.625
+Sofala,Sample1,100.0,275177.1875
+Sofala,Sample1,75.0,261844.484375
+Sofala,Sample1,50.0,242838.875
+Sofala,Sample1,20.0,163585.71875
+Sofala,Sample1,15.0,139693.53125
+Sofala,Sample1,10.0,103020.023438
+Sofala,Sample1,5.0,49516.152344
+Sofala,Sample1,2.0,1979.471558
+Tete,Sample1,1000.0,142269.96875
+Tete,Sample1,750.0,135386.203125
+Tete,Sample1,500.0,131575.90625
+Tete,Sample1,250.0,124119.445312
+Tete,Sample1,200.0,121827.140625
+Tete,Sample1,100.0,112844.21875
+Tete,Sample1,75.0,107593.921875
+Tete,Sample1,50.0,96008.148438
+Tete,Sample1,20.0,56197.835938
+Tete,Sample1,15.0,49335.421875
+Tete,Sample1,10.0,41995.375
+Tete,Sample1,5.0,33231.46875
+Tete,Sample1,2.0,2896.344238
+Zambezia,Sample1,1000.0,217941.09375
+Zambezia,Sample1,750.0,213553.3125
+Zambezia,Sample1,500.0,205972.34375
+Zambezia,Sample1,250.0,196670.203125
+Zambezia,Sample1,200.0,191353.53125
+Zambezia,Sample1,100.0,173097.53125
+Zambezia,Sample1,75.0,160632.78125
+Zambezia,Sample1,50.0,145860.953125
+Zambezia,Sample1,20.0,111986.78125
+Zambezia,Sample1,15.0,97082.15625
+Zambezia,Sample1,10.0,82610.703125
+Zambezia,Sample1,5.0,41573.101562
+Zambezia,Sample1,2.0,9336.310547

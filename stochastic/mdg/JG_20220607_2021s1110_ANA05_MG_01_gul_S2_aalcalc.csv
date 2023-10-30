@@ -1,0 +1,45 @@
+geogname1,type,loss,standard_deviation
+Diana,1_analytic_mean,1243.648385,4197.427933
+Sava,1_analytic_mean,7903.655565,21518.320441
+Sofia,1_analytic_mean,5600.686406,14984.670058
+Boeny,1_analytic_mean,3416.769839,10610.401588
+Analanjirofo,1_analytic_mean,6804.740471,16532.254015
+Melaky,1_analytic_mean,532.292018,1267.441987
+Alaotra Mangoro,1_analytic_mean,2808.743078,7485.300674
+Betsiboka,1_analytic_mean,2044.434742,5369.214249
+Menabe,1_analytic_mean,2365.069605,6089.95813
+Bongolava,1_analytic_mean,112.133763,307.187091
+Analamanga,1_analytic_mean,4726.263226,16298.543518
+Atsinanana,1_analytic_mean,6420.379299,15856.436391
+Itasy,1_analytic_mean,170.176125,539.061559
+Vakinankaratra,1_analytic_mean,610.028188,1941.673243
+Amoron'i Mania,1_analytic_mean,350.229952,1070.186188
+Vatovavy Fitovinany,1_analytic_mean,4976.984202,13166.378837
+Atsimo Andrefana,1_analytic_mean,2008.526801,5864.093795
+Haute Matsiatra,1_analytic_mean,421.991069,1199.877084
+Ihorombe,1_analytic_mean,453.009302,1315.472085
+Anosy,1_analytic_mean,512.545815,1284.635436
+Atsimo Atsinanana,1_analytic_mean,996.588524,2380.788989
+Androy,1_analytic_mean,184.728606,591.680754
+Diana,2_sample_mean,1243.648385,4197.427933
+Sava,2_sample_mean,7903.655565,21518.320441
+Sofia,2_sample_mean,5600.686406,14984.670058
+Boeny,2_sample_mean,3416.769839,10610.401588
+Analanjirofo,2_sample_mean,6804.740471,16532.254015
+Melaky,2_sample_mean,532.292018,1267.441987
+Alaotra Mangoro,2_sample_mean,2808.743078,7485.300674
+Betsiboka,2_sample_mean,2044.434742,5369.214249
+Menabe,2_sample_mean,2365.069605,6089.95813
+Bongolava,2_sample_mean,112.133763,307.187091
+Analamanga,2_sample_mean,4726.263226,16298.543518
+Atsinanana,2_sample_mean,6420.379299,15856.436391
+Itasy,2_sample_mean,170.176125,539.061559
+Vakinankaratra,2_sample_mean,610.028188,1941.673243
+Amoron'i Mania,2_sample_mean,350.229952,1070.186188
+Vatovavy Fitovinany,2_sample_mean,4976.984202,13166.378837
+Atsimo Andrefana,2_sample_mean,2008.526801,5864.093795
+Haute Matsiatra,2_sample_mean,421.991069,1199.877084
+Ihorombe,2_sample_mean,453.009302,1315.472085
+Anosy,2_sample_mean,512.545815,1284.635436
+Atsimo Atsinanana,2_sample_mean,996.588524,2380.788989
+Androy,2_sample_mean,184.728606,591.680754
