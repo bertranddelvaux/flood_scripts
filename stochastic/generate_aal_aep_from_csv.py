@@ -68,29 +68,51 @@ def generate_ylt_economic_loss(country, power_factor=2):
 
         json_dict[f'thresh_{i}'] = {}
 
-        # Read the YLT for the country
-        f_name = os.path.join(COUNTRY_DICT[country], f'YLT/{thresh}_S1_pltcalc.csv')
-        df_ylt = pd.read_csv(f_name)
+        for adm_level, adm_file in enumerate([1, 2]):
 
-        df_ylt_sorted = df_ylt.sort_values(by=['loss'])
-        loss_sorted = df_ylt_sorted['loss'].values
+            json_dict[f'thresh_{i}'][f'adm{adm_level}'] = {}
 
-        df_ylt_sorted['p'] = 1.0 * np.arange(len(df_ylt_sorted)) / float(len(df_ylt_sorted) - 1)
+            # Read the YLT for the country
+            f_name = os.path.join(COUNTRY_DICT[country], f'YLT/{thresh}_S{adm_file}_pltcalc.csv')
+            df_ylt_all = pd.read_csv(f_name)
 
-        # Create a new DataFrame with 'p' values distributed according to a power function
-        p_values = np.linspace(0, 1, N_ROWS)  # Create 'p' values between 0 and 1
-        p_values = 1 - (1 - p_values) ** power_factor  # Apply the power function
+            # if geogname in columns, group by geogname first and apply the rest of the code
+            if 'geogname1' in df_ylt_all.columns:
+                regions = df_ylt_all['geogname1'].unique().tolist()
+            else:
+                regions = ['all']
 
-        # Create a new DataFrame with equally spaced 'loss' values
-        compact_df = pd.DataFrame()
-        compact_df['p'] = p_values
-        compact_df['loss'] = np.interp(compact_df['p'], df_ylt_sorted['p'], df_ylt_sorted['loss'])
+            for region in regions:
 
-        # Create a list of dictionaries
-        json_dict[f'thresh_{i}']['adm0'] = {}
-        json_dict[f'thresh_{i}']['adm0']['loss'] = compact_df['loss'].values.tolist()
-        json_dict[f'thresh_{i}']['adm0']['p'] = compact_df['p'].values.tolist()
-        #json_dict[f'thresh_{i}']['adm0'] = [{'loss': loss, 'p': prob} for loss, prob in zip(loss_sorted, p)]
+                if region != 'all':
+                    df_ylt = df_ylt_all[df_ylt_all['geogname1'] == region]
+                else:
+                    df_ylt = df_ylt_all
+
+                df_ylt_sorted = df_ylt.sort_values(by=['loss'])
+                loss_sorted = df_ylt_sorted['loss'].values
+
+                df_ylt_sorted['p'] = 1.0 * np.arange(len(df_ylt_sorted)) / float(len(df_ylt_sorted) - 1)
+
+                # Create a new DataFrame with 'p' values distributed according to a power function
+                p_values = np.linspace(0, 1, N_ROWS)  # Create 'p' values between 0 and 1
+                p_values = 1 - (1 - p_values) ** power_factor  # Apply the power function
+
+                # Create a new DataFrame with equally spaced 'loss' values
+                compact_df = pd.DataFrame()
+                compact_df['p'] = p_values
+                compact_df['loss'] = np.interp(compact_df['p'], df_ylt_sorted['p'], df_ylt_sorted['loss'])
+
+                # Create a list of dictionaries
+                if region != 'all':
+                    json_dict[f'thresh_{i}'][f'adm{adm_level}'][region] = {}
+                    json_dict[f'thresh_{i}'][f'adm{adm_level}'][region]['loss'] = compact_df['loss'].values.tolist()
+                    json_dict[f'thresh_{i}'][f'adm{adm_level}'][region]['p'] = compact_df['p'].values.tolist()
+                else:
+                    json_dict[f'thresh_{i}'][f'adm{adm_level}'] = {}
+                    json_dict[f'thresh_{i}'][f'adm{adm_level}']['loss'] = compact_df['loss'].values.tolist()
+                    json_dict[f'thresh_{i}'][f'adm{adm_level}']['p'] = compact_df['p'].values.tolist()
+                    #json_dict[f'thresh_{i}']['adm0'] = [{'loss': loss, 'p': prob} for loss, prob in zip(loss_sorted, p)]
 
         # Define the output JSON file name
         json_file = os.path.join('jsons', COUNTRY_DICT[country], f'economic.json')
