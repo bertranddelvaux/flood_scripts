@@ -56,8 +56,8 @@ def generate_aal_aep_people_impacted(country):
     json_file = os.path.join('jsons', COUNTRY_DICT[country], f'population.json')
 
     # Write the JSON data to the file
-    with open(json_file, 'w') as f:
-        json.dump(json_dict, f, indent=4)
+    with open(json_file, 'w', encoding="utf-8") as f:
+        json.dump(json_dict, f, ensure_ascii=False, indent=4)
 
 
 def generate_ylt_economic_loss(country, power_factor=2):
@@ -118,8 +118,8 @@ def generate_ylt_economic_loss(country, power_factor=2):
         json_file = os.path.join('jsons', COUNTRY_DICT[country], f'economic.json')
 
         # Write the list of dictionaries to the file
-        with open(json_file, 'w') as f:
-            json.dump(json_dict, f, indent=4)
+        with open(json_file, 'w', encoding="utf-8") as f:
+            json.dump(json_dict, f, ensure_ascii=False, indent=4)
 
 
 
