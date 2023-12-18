@@ -26,6 +26,9 @@ AGREEMENT_THRESHOLD = 0.5  # 50% agreement
 # max number of days between 2 successive "peaks" of the flood (triggered when above 0.2m)
 N_DAYS_SINCE_LAST_THRESHOLD = 3
 
+# max days of missing data
+MAX_DAYS_MISSING_DATA = 2
+
 # band
 TRIGGER_BAND_VALUE = 5  # 0.2m
 

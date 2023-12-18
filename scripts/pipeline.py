@@ -14,7 +14,7 @@ import pandas as pd
 import numpy as np
 
 from constants.constants import DATA_FOLDER, RASTER_FOLDER, IMPACTS_FOLDER, EVENTS_FOLDER, LIST_COUNTRIES, \
-    LIST_SUBFOLDERS_BUFFER, BUFFER_FOLDER, N_DAYS, N_DAYS_SINCE_LAST_THRESHOLD, TRIGGER_BAND_VALUE, COUNTRIES_FOLDER, HISTORICAL_STARTING_DATES
+    LIST_SUBFOLDERS_BUFFER, BUFFER_FOLDER, N_DAYS, N_DAYS_SINCE_LAST_THRESHOLD, TRIGGER_BAND_VALUE, COUNTRIES_FOLDER, HISTORICAL_STARTING_DATES, MAX_DAYS_MISSING_DATA
 
 from geoserver.interface import uploadToGeoserver, deleteFromGeoserver
 
@@ -696,6 +696,7 @@ def process_pipeline(
 def process_pipeline_historic(
         start_date: str = None,
         end_date: str = None,
+        max_days_missing_data: int = MAX_DAYS_MISSING_DATA,
         n_days_since_last_threshold: int = N_DAYS_SINCE_LAST_THRESHOLD,
         threshold: float = AGREEMENT_THRESHOLD,
         list_countries: list[str] = LIST_COUNTRIES,
@@ -762,8 +763,42 @@ def process_pipeline_historic(
             start_date = f'{year_n}_{month_n}_{day_n}'
             end_date = f'{year_n}_{month_n}_{day_n}'
 
-        download_pipeline(start_date=start_date, end_date=end_date, n_days=n_days,
-                          list_countries=[country], include_str='ens00')  # according to JBA, the first day of forecast, all ensembles are the same
+        days_missing_data = 0
+
+        while days_missing_data <= max_days_missing_data:
+            # pipeline to download data
+            try:
+                download_pipeline(start_date=start_date, end_date=end_date, n_days=n_days,
+                                  list_countries=[country], include_str='ens00')  # according to JBA, the first day of forecast, all ensembles are the same
+                break
+            except FileNotFoundError:
+                print(f'{colorize_text("No data available for this date", "red")}')
+
+                # check if ongoing event
+                # json file for country
+                json_path_country = os.path.join(DATA_FOLDER, country)
+                json_file_country = f'{country}.json'
+
+                # check if json file exists
+                if os.path.exists(os.path.join(json_path_country, json_file_country)):
+                    # load json file into dict
+                    with open(os.path.join(json_path_country, json_file_country), 'r') as f:
+                        json_dict_country = jsonFileToDict(json_path_country, json_file_country)
+                        if json_dict_country['ongoing'] == True:
+                            error_message = f'Missing data during an ongoing event. Please check the data for {country} and try again.'
+                            print(f'{colorize_text(error_message, "red")}')
+                            exit()
+
+                days_missing_data += 1
+                year_n, month_n, day_n = increment_day(year, month, day, inc_days+days_missing_data)
+                start_date = f'{year_n}_{month_n}_{day_n}'
+                end_date = f'{year_n}_{month_n}_{day_n}'
+                json_dict['latest_date'].insert(0, "missing_data")
+
+        if days_missing_data > max_days_missing_data:
+            error_message = f'Failed to process pipeline because no data available for the last {max_days_missing_data} days'
+            print(f'{colorize_text(error_message, "red")}')
+            exit()
 
         # pipeline to process data
         process_pipeline(
@@ -809,6 +844,7 @@ if __name__ == "__main__":
     parser.add_argument('-d', '--depth_band_trigger', help='Depth band trigger', type=int, default=TRIGGER_BAND_VALUE)
     parser.add_argument('-t', '--n_days_since_last_threshold', help='Number of days since last threshold', type=int, default=N_DAYS_SINCE_LAST_THRESHOLD)
     parser.add_argument('-at', '--agreement_threshold', help='Agreement threshold', type=float, default=AGREEMENT_THRESHOLD)
+    parser.add_argument('-m', '--max_days_missing_data', help='Max days missing data', type=int, default=MAX_DAYS_MISSING_DATA)
     args = parser.parse_args()
 
     username = args.username
@@ -852,6 +888,7 @@ if __name__ == "__main__":
             start_date=args.start_date,
             end_date=args.end_date,
             n_days_since_last_threshold=args.n_days_since_last_threshold,
+            max_days_missing_data=args.max_days_missing_data,
             threshold=args.agreement_threshold,
             list_countries=args.list_countries,
             geoserver=args.geoserver,
