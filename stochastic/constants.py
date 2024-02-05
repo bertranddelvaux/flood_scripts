@@ -1,5 +1,5 @@
 #Country and regions list
-COUNTRY_LIST = ['Ivory Coast', 'Madagascar', 'Malawi', 'Mozambique'] # ['Ghana', 'Ivory Coast', 'Madagascar', 'Malawi', 'Mozambique', 'Togo']
+COUNTRY_LIST = ['Ghana', 'Ivory Coast', 'Madagascar', 'Malawi', 'Mozambique', 'Togo'] # ['Ivory Coast', 'Madagascar', 'Malawi', 'Mozambique'] # ['Ghana', 'Ivory Coast', 'Madagascar', 'Malawi', 'Mozambique', 'Togo']
 
 COUNTRY_DICT = {
     'Ghana': 'gha',
