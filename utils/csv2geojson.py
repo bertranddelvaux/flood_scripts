@@ -60,9 +60,12 @@ def csv2geojson(csv_file, shp_file, output_file, geotiff:bool = True, to_epsg_38
     gdf = gpd.GeoDataFrame(merged)
     if geotiff:
         output_file = output_file.replace('.geojson', '.tif')
-        gdf_to_geotiff(gdf, output_file)
-        if to_epsg_3857:
-            reproject_tif(output_file, to_crs='EPSG:3857')
+        if not gdf.empty:
+            gdf_to_geotiff(gdf, output_file)
+            if to_epsg_3857:
+                reproject_tif(output_file, to_crs='EPSG:3857')
+        else:
+            print('GeoDataFrame is empty')
     else:
         gdf.to_file(output_file, driver='GeoJSON')
 

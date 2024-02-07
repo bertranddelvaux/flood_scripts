@@ -16,6 +16,11 @@ def gdf_to_geotiff(gdf: gpd.GeoDataFrame, output_file: str, resolution: float = 
 
     crs = gdf.crs
     x_min, y_min, x_max, y_max = gdf.total_bounds
+
+    # raise exception if the bounds are nans
+    if any([x_min, y_min, x_max, y_max]):
+        raise ValueError('The bounds are nans')
+
     heigth = int(((y_max - y_min) / resolution) / 2)
     width = int(((x_max - x_min) / resolution) / 2)
 
