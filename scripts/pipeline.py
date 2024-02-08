@@ -253,6 +253,7 @@ def process_pipeline(
                                 output_file=csv_file.replace('.csv', '.geojson'),
                                 to_epsg_3857=to_epsg_3857,
                             )
+                            print()
                         elif 'economic' in csv_file:
                             merged_economic_adm0, merged_economic_adm1, merged_economic_adm2, df_grouped_economic = csv2geojson(
                                 csv_file=csv_file,

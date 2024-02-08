@@ -8,7 +8,7 @@ from utils.tif import reproject_tif
 from utils.dataframe import agg_threshold
 
 
-def csv2geojson(csv_file, shp_file, output_file, geotiff:bool = True, to_epsg_3857: bool = True, decimals=2):
+def csv2geojson(csv_file, shp_file, output_file, geotiff:bool = False, to_epsg_3857: bool = True, decimals=2):
     """
     Convert csv to geojson
 
@@ -40,6 +40,10 @@ def csv2geojson(csv_file, shp_file, output_file, geotiff:bool = True, to_epsg_38
 
     # Merge the two dataframes on admin_code and ADM2_CODE
     merged = pd.merge(df_grouped, shapefile, left_on='admin_code', right_on='ADM2_CODE')
+    if merged.empty:
+        # print message to let the user know that the ADM2_CODE was not present in the file
+        print('WARNING - ADM2_CODE was not present in the file')
+        merged = pd.merge(df_grouped, shapefile, left_on='admin_code', right_on='ADM1_CODE')
 
     # Convert the columns from float to int in the merged DataFrame
     # merged['ADM2_CODE'] = merged['ADM2_CODE'].astype(int)
