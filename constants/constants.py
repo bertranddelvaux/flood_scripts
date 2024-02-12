@@ -1,6 +1,6 @@
 # directory structure
 DATA_FOLDER = 'data'
-LIST_COUNTRIES = ['civ', 'mdg', 'moz', 'mwi', 'tgo'] #TODO: there is an issue for 'gha'
+LIST_COUNTRIES = ['civ', 'mdg', 'moz', 'mwi', 'tgo', 'gha'] #TODO: there is an issue for 'gha'
 IMPACTS_FOLDER = 'impacts'
 RASTER_FOLDER = 'raster'
 EVENTS_FOLDER = 'events'
@@ -52,7 +52,8 @@ HISTORICAL_STARTING_DATES = {
     'mdg': '2022_07_05',
     'moz': '2022_04_28',
     'mwi': '2022_07_05',
-    'tgo': '2022_04_28'
+    'tgo': '2022_04_28',
+    'gha': '2022_03_17'
 }
 
 # TIF resolution
