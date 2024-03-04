@@ -785,10 +785,11 @@ def process_pipeline_historic(
                     # load json file into dict
                     with open(os.path.join(json_path_country, json_file_country), 'r') as f:
                         json_dict_country = jsonFileToDict(json_path_country, json_file_country)
-                        if json_dict_country['ongoing'] == True:
-                            error_message = f'Missing data during an ongoing event. Please check the data for {country} and try again.'
-                            print(f'{colorize_text(error_message, "red")}')
-                            exit()
+                        #TODO: uncomment this if you want to exit whenever there is missing data within an ongoing event
+                        # if json_dict_country['ongoing'] == True:
+                        #     error_message = f'Missing data during an ongoing event. Please check the data for {country} and try again.'
+                        #     print(f'{colorize_text(error_message, "red")}')
+                        #     exit()
 
                 days_missing_data += 1
                 year_n, month_n, day_n = increment_day(year, month, day, inc_days+days_missing_data)
@@ -902,6 +903,7 @@ if __name__ == "__main__":
         for i in range(n_days_to_run-1):
             process_pipeline_historic(
                 n_days_since_last_threshold=args.n_days_since_last_threshold,
+                max_days_missing_data=args.max_days_missing_data,
                 threshold=args.agreement_threshold,
                 list_countries=args.list_countries,
                 geoserver=args.geoserver,
