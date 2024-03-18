@@ -11,6 +11,12 @@ COUNTRY_DICT = {
 }
 
 REGION_DICT = {
+    'Ghana':
+        ['Upper East', 'Northern', 'Oti', 'Volta', 'Eastern', 'Greater Accra', 'Central', 'Western', 'Western North', 'Ashanti', 'Bono', 'Bono East', 'Ahafo', 'Savannah', 'North East', 'Upper West'],
+    'Ivory Coast':
+        ['Abidjan', 'Bas-Sassandra', 'Comoé', 'Denguélé', 'Gôh-Djiboua', 'Lacs', 'Lagunes', 'Montagnes', 'Sassandra-Marahoué', 'Savanes', 'Vallée du Bandama', 'Worodougou', 'Zanzan'],
+    'Togo':
+        ['Kara', 'Savanes', 'Centrale', 'Plateaux', 'Maritime'],
     'Mozambique':
         ['Niassa', 'Cabo Delgado', 'Nampula', 'Maputo', 'Tete', 'Zambezia','Manica','Sofala','Gaza',
          'Inhambane','Cidade de Maputo',
