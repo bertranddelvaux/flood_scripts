@@ -24,7 +24,7 @@ from utils.json import createJSONifNotExists, jsonFileToDict
 from utils.event import initialize_event, set_ongoing_event, save_json_last_edit
 from utils.tif import tifs_2_tif_depth, tif_2_array, reproject_and_maximize_tifs, merge_tifs
 from utils.stats import array_2_stats
-from utils.sftp import download_pipeline
+from utils.sftp import download_pipeline, generate_json_missing_data
 from utils.csv2geojson import csv2geojson
 from utils.string_format import colorize_text
 from utils.dataframe import sum_list_dict
@@ -849,11 +849,16 @@ if __name__ == "__main__":
     parser.add_argument('-t', '--n_days_since_last_threshold', help='Number of days since last threshold', type=int, default=N_DAYS_SINCE_LAST_THRESHOLD)
     parser.add_argument('-at', '--agreement_threshold', help='Agreement threshold', type=float, default=AGREEMENT_THRESHOLD)
     parser.add_argument('-m', '--max_days_missing_data', help='Max days missing data', type=int, default=MAX_DAYS_MISSING_DATA)
+    parser.add_argument('--missing_data', help='Generate JSON with missing data information', type=str, default=None)
     args = parser.parse_args()
 
     username = args.username
     password = args.password
     server = args.server
+
+    if args.missing_data is not None:
+        generate_json_missing_data(json_file_path=args.missing_data)
+        exit()
 
     if args.geoserver:
         if args.username is None:
