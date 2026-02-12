@@ -21,7 +21,7 @@ from geoserver.interface import uploadToGeoserver, deleteFromGeoserver
 from utils.files import createFolderIfNotExists, createDataTreeStructure
 from utils.date import increment_day
 from utils.json import createJSONifNotExists, jsonFileToDict
-from utils.event import initialize_event, set_ongoing_event, save_json_last_edit
+from utils.event import initialize_event, set_ongoing_event, save_json_last_edit, update_event_to_jsons
 from utils.tif import tifs_2_tif_depth, tif_2_array, reproject_and_maximize_tifs, merge_tifs
 from utils.stats import array_2_stats
 from utils.sftp import download_pipeline, generate_json_missing_data
@@ -319,6 +319,18 @@ def process_pipeline(
                                 }
                             )
 
+                            # Make sure that in case of an ongoing event, the dict_event is being copied continuously to the year it started
+                            if dict_country['ongoing']:
+                                # get the json year of the ongoing event
+                                year_ongoing = dict_country['ongoing_event_year']
+                                month_ongoing = dict_country['ongoing_event_month']
+                                day_ongoing = dict_country['ongoing_event_day']
+
+                                # get the json year of the ongoing event
+                                json_path_year = os.path.join(DATA_FOLDER, country, EVENTS_FOLDER, year_ongoing)
+                                json_file_year = f'{country}_{year_ongoing}.json'
+                                dict_year = jsonFileToDict(json_path_year, json_file_year)
+
                             # check if empty:
                             print('\t\t\tNot empty? ', end='')
 
@@ -390,29 +402,11 @@ def process_pipeline(
                                         dict_country = set_ongoing_event(json_path_country, json_file_country, False)
                                         dict_year = set_ongoing_event(json_path_year, json_file_year, False)
 
-                                        # update jsons
-                                        # TODO: this is where country and year jsons are incremented
-
-                                        # get event start date
-                                        start_date = dict_event['start_date']
-
-                                        dict_year['total_events_year'] += 1
-                                        dict_year['total_days_year'] += dict_event['total_days_event']
-                                        dict_year['event_by_event'][start_date] = {
-                                            'path': os.path.join(DATA_FOLDER, country, EVENTS_FOLDER, year_ongoing, month_ongoing, day_ongoing, json_file_event),
-                                            'event': dict_event
-                                        }
-
-                                        dict_country['total_events_country'] += 1
-                                        dict_country['total_days_country'] += dict_event['total_days_event']
-                                        dict_country['year_by_year'].setdefault(year_ongoing, {})
-                                        dict_country['year_by_year'][year_ongoing][start_date] = dict_year['event_by_event'][start_date]
-
-                                        # TODO: pick up the biggest numbers from the ongoing event and put them in the peak event: flooded area, flooded population, losses, severity_index
-
-                                        dict_country = save_json_last_edit(json_path_country, json_file_country,
-                                                                           dict_country)
-                                        dict_year = save_json_last_edit(json_path_year, json_file_year, dict_year)
+                                        update_event_to_jsons(
+                                            event=(json_path_event, json_file_event, dict_event),
+                                            year=(json_path_year, json_file_year, dict_year),
+                                            country=(json_path_country, json_file_country, dict_country)
+                                        )
 
                                     else:
 
@@ -437,10 +431,10 @@ def process_pipeline(
                                         print(
                                             f'\t\t\t\t\033[95mNumber of days since last day above threshold: {dict_event["number_of_days_since_last_threshold"]}\033[0m')
 
-                                        dict_event = save_json_last_edit(
-                                            json_path=json_path_event,
-                                            json_file=json_file_event,
-                                            json_dict=dict_event
+                                        update_event_to_jsons(
+                                            event=(json_path_event, json_file_event, dict_event),
+                                            year=(json_path_year, json_file_year, dict_year),
+                                            country=(json_path_country, json_file_country, dict_country)
                                         )
 
                                 else:
@@ -682,11 +676,10 @@ def process_pipeline(
                                         dict_event['economic_total'] = [{key: int(value)} for key, value in pd.DataFrame.from_records(dict_event['adm0_eco_max']).sum().items() if key != 'ADM0_NAME']
                                         # dict_event['economic_total'] = [{key: int(value)} for key, value in pd.DataFrame.from_records(dict_event['economic_max']).sum().items() if key != 'admin_code']
 
-
-                                dict_event = save_json_last_edit(
-                                    json_path=json_path_event,
-                                    json_file=json_file_event,
-                                    json_dict=dict_event
+                                update_event_to_jsons(
+                                    event=(json_path_event, json_file_event, dict_event),
+                                    year=(json_path_year, json_file_year, dict_year),
+                                    country=(json_path_country, json_file_country, dict_country)
                                 )
 
         # increment day
