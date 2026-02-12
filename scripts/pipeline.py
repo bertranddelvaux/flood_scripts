@@ -886,7 +886,7 @@ if __name__ == "__main__":
         else:
             start_date = dt.datetime.strptime(args.start_date, '%Y_%m_%d')
             end_date = dt.datetime.strptime(args.end_date, '%Y_%m_%d')
-            n_days_to_run = (end_date - start_date).days
+            n_days_to_run = (end_date - start_date).days + 1
 
         process_pipeline_historic(
             start_date=args.start_date,
