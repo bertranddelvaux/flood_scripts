@@ -137,6 +137,12 @@ def update_event_to_jsons(event, year, country) -> tuple[dict, dict, dict]:
     dict_country['total_events_country'] = len(all_events)
     dict_country['total_days_country'] = sum(all_events)
 
+    # adding the ongoing event to country
+    if dict_country['ongoing']:
+        dict_country['ongoing_event'] = dict_event
+    else:
+        dict_country['ongoing_event'] = {}
+
     # updating country json
     dict_country = save_json_last_edit(json_path_country, json_file_country, dict_country)
 
