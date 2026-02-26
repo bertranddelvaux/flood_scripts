@@ -398,6 +398,7 @@ def process_pipeline(
                                         # close ongoing event
                                         print(
                                             f'\t\t\t\t\033[95mClosing ongoing event that started on {year_ongoing:04}_{month_ongoing:02}_{day_ongoing:02}... \033[0m')
+                                        dict_event = set_ongoing_event(json_path_event, json_file_event, False)
                                         dict_country = set_ongoing_event(json_path_country, json_file_country, False)
                                         dict_year = set_ongoing_event(json_path_year, json_file_year, False)
 
