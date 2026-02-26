@@ -101,18 +101,22 @@ def update_event_to_jsons(event, year, country) -> tuple[dict, dict, dict]:
     json_path_year, json_file_year, dict_year = year
     json_path_country, json_file_country, dict_country = country
 
+    # get event information
+    start_date = dict_event['start_date']
+    year_ongoing = dict_event['ongoing_event_year']
+    month_ongoing = dict_event['ongoing_event_month']
+    day_ongoing = dict_event['ongoing_event_day']
+
+    # adding self-contained path to dict_event, if needed
+    dict_event['path'] = os.path.join(json_path_country, EVENTS_FOLDER, year_ongoing,
+                             month_ongoing, day_ongoing, json_file_event)
+
     # updating event json
     dict_event = save_json_last_edit(
         json_path=json_path_event,
         json_file=json_file_event,
         json_dict=dict_event
     )
-
-    # get event information
-    start_date = dict_event['start_date']
-    year_ongoing = dict_event['ongoing_event_year']
-    month_ongoing = dict_event['ongoing_event_month']
-    day_ongoing = dict_event['ongoing_event_day']
 
     # updating the event in dict_year
     dict_year['event_by_event'][start_date] = {
@@ -137,7 +141,7 @@ def update_event_to_jsons(event, year, country) -> tuple[dict, dict, dict]:
     dict_country['total_events_country'] = len(all_events)
     dict_country['total_days_country'] = sum(all_events)
 
-    # adding the ongoing event to country
+    # adding/removing the ongoing event to the country dictionary of ongoing events
     if dict_country['ongoing']:
         dict_country['ongoing_event'] = dict_event
     else:
