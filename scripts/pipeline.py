@@ -16,7 +16,7 @@ import numpy as np
 from constants.constants import DATA_FOLDER, RASTER_FOLDER, IMPACTS_FOLDER, EVENTS_FOLDER, LIST_COUNTRIES, \
     LIST_SUBFOLDERS_BUFFER, BUFFER_FOLDER, N_DAYS, N_DAYS_SINCE_LAST_THRESHOLD, TRIGGER_BAND_VALUE, COUNTRIES_FOLDER, HISTORICAL_STARTING_DATES, MAX_DAYS_MISSING_DATA
 
-from geoserver.interface import uploadToGeoserver, deleteFromGeoserver
+# from geoserver.interface import uploadToGeoserver, deleteFromGeoserver
 
 from utils.files import createFolderIfNotExists, createDataTreeStructure
 from utils.date import increment_day
@@ -31,7 +31,6 @@ from utils.dataframe import sum_list_dict
 from utils.dataframe import find_maximum_values
 
 from constants.constants import AGREEMENT_THRESHOLD
-
 
 def clean_buffer_impacts(
         year: str,
@@ -835,6 +834,8 @@ if __name__ == "__main__":
     parser.add_argument('-hist', '--historic', help='Run historic data', action='store_true', default=False)
     parser.add_argument('-to_now', '--to_now', help='Run historic data to now', action='store_true', default=False)
     parser.add_argument('-g', '--geoserver', help='Update geoserver', action='store_true', default=False)
+    parser.add_argument('-gv', '--geoserver_version', help='GeoServer API version (legacy or modern)',
+                        type=str, choices=['legacy', 'modern'], default='legacy')
     parser.add_argument('-u', '--username', help='Geoserver username', type=str, default=None)
     parser.add_argument('-p', '--password', help='Geoserver password', type=str, default=None)
     parser.add_argument('-server', '--server', help='Geoserver server', type=str, default='http://localhost:8080/geoserver/')
@@ -848,6 +849,14 @@ if __name__ == "__main__":
     username = args.username
     password = args.password
     server = args.server
+
+    if args.geoserver_version == 'legacy':
+        from geoserver.interface import uploadToGeoserver, deleteFromGeoserver
+    elif args.geoserver_version == 'modern':
+        from geoserver.interface_rest_json import uploadToGeoserver, deleteFromGeoserver
+    else:
+        raise ValueError(
+            f"Geoserver version '{args.geoserver_version}' was not recognized. Expected 'legacy' or 'modern'.")
 
     if args.missing_data is not None:
         generate_json_missing_data(json_file_path=args.missing_data)
