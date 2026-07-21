@@ -1,6 +1,7 @@
 import os
 import pysftp
 import json
+import zipfile
 from datetime import datetime, timedelta
 
 from interface.connection import HOSTNAME, USERNAME, PASSWORD, cnopts
@@ -57,6 +58,18 @@ def download_pipeline(
                 if sub_folder == IMPACTS_FOLDER:
                     path = os.path.join(DATA_FOLDER, country, sub_folder)
                     sftp.get_d(path_sftp, path, preserve_mtime=False)
+
+                    # Post-process files: extract any .zip archives and delete them
+                    for filename in os.listdir(path):
+                        filepath = os.path.join(path, filename)
+
+                        # Check for zip extension and ensure it's a file
+                        if filename.lower().endswith(".zip") and os.path.isfile(filepath):
+                            with zipfile.ZipFile(filepath, "r") as zip_ref:
+                                zip_ref.extractall(path)
+
+                            # Clean up the zip archive so only extracted CSVs remain
+                            os.remove(filepath)
 
                 elif sub_folder == RASTER_FOLDER:
                     buffer_path = os.path.join(DATA_FOLDER, country, sub_folder, BUFFER_FOLDER)
