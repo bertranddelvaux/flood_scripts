@@ -16,8 +16,6 @@ import numpy as np
 from constants.constants import DATA_FOLDER, RASTER_FOLDER, IMPACTS_FOLDER, EVENTS_FOLDER, LIST_COUNTRIES, \
     LIST_SUBFOLDERS_BUFFER, BUFFER_FOLDER, N_DAYS, N_DAYS_SINCE_LAST_THRESHOLD, TRIGGER_BAND_VALUE, COUNTRIES_FOLDER, HISTORICAL_STARTING_DATES, MAX_DAYS_MISSING_DATA
 
-# from geoserver.interface import uploadToGeoserver, deleteFromGeoserver
-
 from utils.files import createFolderIfNotExists, createDataTreeStructure
 from utils.date import increment_day
 from utils.json import createJSONifNotExists, jsonFileToDict
@@ -70,15 +68,20 @@ def clean_buffer_impacts(
                     if fe > rd or rd < f'{year_last}{month_last}{day_last}':
                         os.remove(os.path.join(path, file))
                         if geoserver:
-                            #TODO: remove file from geoserver
-                            delete_success = deleteFromGeoserver(
-                                filename=os.path.join(path, file),
+
+                            # Initialize the client once
+                            geo_client = GeoServerClient(
+                                server_url=server,
                                 username=username,
                                 password=password,
-                                server=server,
                             )
+
+                            delete_success = geo_client.delete_geotiff(
+                                filename=os.path.join(path, file),
+                            )
+
                             if delete_success:
-                                print(f'\t\t\tRemoved {file} from geoserver')
+                                print(f'\t\t\t\t⮑Removed \033[32m{file} \033[35mfrom geoserver\033[0m')
                 except IndexError:
                     print(f'File {file} does not have the right format')
 
@@ -154,7 +157,6 @@ def process_files_include_exclude(
             server_url=server,
             username=username,
             password=password,
-            # workspace="my_workspace"
         )
 
         # Upload the file physically over the network and apply the style
@@ -722,7 +724,17 @@ def process_pipeline(
 
     # clean buffer
     print('\t\t\tCleaning buffer...')
-    clean_buffer_impacts(year, month, day, list_countries=LIST_COUNTRIES, n_days=n_days)
+    clean_buffer_impacts(
+        year=year,
+        month=month,
+        day=day,
+        list_countries=LIST_COUNTRIES,
+        n_days=n_days,
+        geoserver=geoserver,
+        server=server,
+        username=username,
+        password=password,
+    )
 
 def process_pipeline_historic(
         start_date: str = None,
