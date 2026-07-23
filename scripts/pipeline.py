@@ -148,14 +148,23 @@ def process_files_include_exclude(
     # upload to geoserver
     upload_success = False
     if geoserver:
-        upload_success = uploadToGeoserver(
-            path_file=raster_depth_file,
+
+        # Initialize the client once
+        geo_client = GeoServerClient(
+            server_url=server,
             username=username,
             password=password,
-            server=server
+            # workspace="my_workspace"
         )
 
-    print(f'\t\t\tCreated depth map{" (uploaded to geoserver)" if geoserver and upload_success else ""}: \033[32m{raster_depth_file}\033[0m ', end='')
+        # Upload the file physically over the network and apply the style
+        upload_success = geo_client.upload_geotiff(
+            path_file=raster_depth_file,
+            sld_name="flood_depth_jba",
+            is_external=False  # Set to True ONLY if GeoServer shares your filesystem
+        )
+
+    print(f'\t\t\t\tCreated depth map\033[35m{" (uploaded to geoserver)" if geoserver and upload_success else ""}\033[0m: \033[32m{raster_depth_file}\033[0m ', end='')
 
     return success, empty, bbox, max_band_value
 
@@ -560,6 +569,24 @@ def process_pipeline(
                                     bbox_max = merge_tifs(tifs_list=[max_depth_file, depth_file], output_file=max_depth_file)
                                     print(f'\t\t\t\t\033[34mUpdated {os.path.basename(max_depth_file)}... \033[0m')
 
+                                if geoserver:
+                                    # Initialize the client once
+                                    geo_client = GeoServerClient(
+                                        server_url=server,
+                                        username=username,
+                                        password=password,
+                                        # workspace="my_workspace"
+                                    )
+
+                                    # Upload the file physically over the network and apply the style
+                                    upload_success = geo_client.upload_geotiff(
+                                        path_file=max_depth_file,
+                                        sld_name="flood_depth_jba",
+                                        is_external=False  # Set to True ONLY if GeoServer shares your filesystem
+                                    )
+
+                                    print(f'\t\t\t\t\t\033[34m⮑\033[35m{" (uploaded to geoserver)" if geoserver and upload_success else ""}\033[0m: \033[32m{max_depth_file}\033[0m ')
+
                                 # copy the impact file
                                 impact_files = [os.path.join(DATA_FOLDER, country, IMPACTS_FOLDER, f) for f in
                                                 os.listdir(os.path.join(DATA_FOLDER, country, IMPACTS_FOLDER)) if
@@ -862,7 +889,7 @@ if __name__ == "__main__":
     if args.geoserver_version == 'legacy':
         from geoserver.interface import uploadToGeoserver, deleteFromGeoserver
     elif args.geoserver_version == 'modern':
-        from geoserver.interface_rest_json import uploadToGeoserver, deleteFromGeoserver
+        from geoserver.interface_modern import GeoServerClient
     else:
         raise ValueError(
             f"Geoserver version '{args.geoserver_version}' was not recognized. Expected 'legacy' or 'modern'.")
