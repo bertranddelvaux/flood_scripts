@@ -11,12 +11,25 @@ logger = logging.getLogger(__name__)
 
 class GeoServerClient:
     def __init__(self, server_url: str, username: str, password: str):
+        if not username or not password:
+            raise ValueError("Username and password cannot be None or empty.")
+
         self.base_url = server_url.rstrip('/')
         self.workspace = GEOSERVER_WORKSPACE
 
-        # A Session pools connections and automatically injects auth into every request
         self.session = requests.Session()
         self.session.auth = HTTPBasicAuth(username, password)
+
+        # Optionally test connection immediately upon creation:
+        self.test_connection()
+
+    def test_connection(self) -> None:
+        """Pings GeoServer to verify server URL and credentials."""
+        test_url = f"{self.base_url}/rest/about/version.json"
+        response = self.session.get(test_url, timeout=5)
+
+        # Raises HTTPError if status code is 401, 404, 500, etc.
+        response.raise_for_status()
 
     def upload_geotiff(
             self,
