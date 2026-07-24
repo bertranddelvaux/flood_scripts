@@ -894,14 +894,14 @@ if __name__ == "__main__":
     parser.add_argument('--missing_data', help='Generate JSON with missing data information', type=str, default=None)
     args = parser.parse_args()
 
-    username = args.username
-    password = args.password
-    server = args.server
-
     geo_client = None
 
     if args.geoserver:
         if args.geoserver_version == 'modern':
+
+            username = args.username
+            password = args.password
+            server = args.server
 
             if args.username is None:
                 username = os.environ.get('GEOSERVER_USERNAME')
