@@ -75,13 +75,6 @@ def clean_buffer_impacts(
                         os.remove(os.path.join(path, file))
                         if geoserver:
 
-                            # Initialize the client once
-                            geo_client = GeoServerClient(
-                                server_url=server,
-                                username=username,
-                                password=password,
-                            )
-
                             delete_success = geo_client.delete_geotiff(
                                 filename=os.path.join(path, file),
                             )
@@ -158,13 +151,6 @@ def process_files_include_exclude(
     # upload to geoserver
     upload_success = False
     if geoserver:
-
-        # Initialize the client once
-        geo_client = GeoServerClient(
-            server_url=server,
-            username=username,
-            password=password,
-        )
 
         # Upload the file physically over the network and apply the style
         upload_success = geo_client.upload_geotiff(
@@ -303,6 +289,7 @@ def process_pipeline(
                             n_bands=211,
                             threshold=threshold,
                             to_epsg_3857=to_epsg_3857,
+                            geo_client=geo_client,
                             geoserver=geoserver,
                             username=username,
                             password=password,
@@ -580,13 +567,6 @@ def process_pipeline(
                                     print(f'\t\t\t\t\033[34mUpdated {os.path.basename(max_depth_file)}... \033[0m')
 
                                 if geoserver:
-                                    # Initialize the client once
-                                    geo_client = GeoServerClient(
-                                        server_url=server,
-                                        username=username,
-                                        password=password,
-                                        # workspace="my_workspace"
-                                    )
 
                                     # Upload the file physically over the network and apply the style
                                     upload_success = geo_client.upload_geotiff(
