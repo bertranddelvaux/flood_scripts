@@ -4,6 +4,7 @@
 # Script to populate ARC's Flood Explorer buffer    #
 #                                                   #
 #####################################################
+from __future__ import annotations
 
 import os
 import shutil
@@ -12,6 +13,11 @@ import argparse
 
 import pandas as pd
 import numpy as np
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from geoserver.interface_modern import GeoServerClient
 
 from constants.constants import DATA_FOLDER, RASTER_FOLDER, IMPACTS_FOLDER, EVENTS_FOLDER, LIST_COUNTRIES, \
     LIST_SUBFOLDERS_BUFFER, BUFFER_FOLDER, N_DAYS, N_DAYS_SINCE_LAST_THRESHOLD, TRIGGER_BAND_VALUE, COUNTRIES_FOLDER, HISTORICAL_STARTING_DATES, MAX_DAYS_MISSING_DATA
@@ -108,6 +114,7 @@ def process_files_include_exclude(
         threshold: float = AGREEMENT_THRESHOLD,
         to_epsg_3857: bool = True,
         geoserver: bool = False,
+        geo_client: GeoServerClient | None = None,
         username: str = None,
         password: str = None,
         server: str = None,
@@ -180,6 +187,7 @@ def process_pipeline(
         to_epsg_3857: bool = True,
         threshold: float = AGREEMENT_THRESHOLD,
         geoserver: bool = False,
+        geo_client: GeoServerClient | None = None,
         username: str = None,
         password: str = None,
         server: str = None,
@@ -745,6 +753,7 @@ def process_pipeline_historic(
         list_countries: list[str] = LIST_COUNTRIES,
         to_epsg_3857: bool = True,
         geoserver: bool = False,
+        geo_client: GeoServerClient | None = None,
         username: str = None,
         password: str = None,
         server: str = None,
@@ -853,6 +862,7 @@ def process_pipeline_historic(
             threshold=threshold,
             list_countries=[country],
             geoserver=geoserver,
+            geo_client=geo_client,
             username=username,
             password=password,
             server=server,
@@ -938,6 +948,7 @@ if __name__ == "__main__":
             threshold=args.agreement_threshold,
             list_countries=args.list_countries,
             geoserver=args.geoserver,
+            geo_client=geo_client,
             username=username,
             password=password,
             server=server,
@@ -962,6 +973,7 @@ if __name__ == "__main__":
             threshold=args.agreement_threshold,
             list_countries=args.list_countries,
             geoserver=args.geoserver,
+            geo_client=geo_client,
             username=username,
             password=password,
             server=server,
@@ -975,6 +987,7 @@ if __name__ == "__main__":
                 threshold=args.agreement_threshold,
                 list_countries=args.list_countries,
                 geoserver=args.geoserver,
+                geo_client=geo_client,
                 username=username,
                 password=password,
                 server=server,
