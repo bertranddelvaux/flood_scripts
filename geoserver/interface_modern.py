@@ -8,28 +8,84 @@ from constants.constants import GEOSERVER_WORKSPACE
 # Initialize module-level logger
 logger = logging.getLogger(__name__)
 
+# --- Custom Exceptions for Clean Exception Handling ---
+class GeoServerAuthError(Exception):
+    """Raised when username or password are incorrect."""
+    pass
+
+class GeoServerConnectionError(Exception):
+    """Raised when the GeoServer URL is invalid, unreachable, or workspace doesn't exist."""
+    pass
+
 
 class GeoServerClient:
-    def __init__(self, server_url: str, username: str, password: str):
+    def __init__(
+        self,
+        server_url: str,
+        username: str,
+        password: str,
+        workspace: str = GEOSERVER_WORKSPACE,
+        timeout: int = 10
+    ):
         if not username or not password:
-            raise ValueError("Username and password cannot be None or empty.")
+            raise ValueError("GeoServer username and password must be provided.")
 
         self.base_url = server_url.rstrip('/')
-        self.workspace = GEOSERVER_WORKSPACE
+        self.workspace = workspace
+        self.timeout = timeout
 
         self.session = requests.Session()
         self.session.auth = HTTPBasicAuth(username, password)
 
-        # Optionally test connection immediately upon creation:
-        self.test_connection()
+        # Verify credentials and server reachability immediately upon instantiation
+        self._verify_connection()
 
-    def test_connection(self) -> None:
-        """Pings GeoServer to verify server URL and credentials."""
-        test_url = f"{self.base_url}/rest/about/version.json"
-        response = self.session.get(test_url, timeout=5)
+    def _verify_connection(self) -> None:
+        """
+        Pings GeoServer's REST API to test credentials, URL reachability, and workspace existence.
+        Raises descriptive custom exceptions on failure.
+        """
+        # Testing against the workspace REST endpoint verifies server URL, credentials, AND workspace existence all at once
+        test_url = f"{self.base_url}/rest/workspaces/{self.workspace}.json"
 
-        # Raises HTTPError if status code is 401, 404, 500, etc.
-        response.raise_for_status()
+        try:
+            response = self.session.get(test_url, timeout=self.timeout)
+
+            # 1. Invalid Username / Password
+            if response.status_code in (401, 403):
+                raise GeoServerAuthError(
+                    f"Authentication failed for user '{self.session.auth.username}'. "
+                    f"Please check your GeoServer credentials."
+                )
+
+            # 2. Server exists, but workspace or REST API context is wrong
+            if response.status_code == 404:
+                raise GeoServerConnectionError(
+                    f"GeoServer found at '{self.base_url}', but REST API or workspace "
+                    f"'{self.workspace}' was not found (404)."
+                )
+
+            # Check for any other 4xx/5xx errors
+            response.raise_for_status()
+
+        except (requests.exceptions.ConnectionError, requests.exceptions.InvalidURL) as e:
+            # 3. Server URL is wrong or host is unreachable
+            raise GeoServerConnectionError(
+                f"Could not connect to GeoServer at '{self.base_url}'. "
+                f"Check that the server URL is correct and the instance is running."
+            ) from e
+
+        except requests.exceptions.Timeout as e:
+            # 4. Connection timed out
+            raise GeoServerConnectionError(
+                f"Connection timed out while attempting to reach GeoServer at '{self.base_url}'."
+            ) from e
+
+        except requests.exceptions.HTTPError as e:
+            # Catch-all for unexpected status codes
+            raise GeoServerConnectionError(
+                f"GeoServer returned unexpected status {response.status_code}: {response.text}"
+            ) from e
 
     def upload_geotiff(
             self,
