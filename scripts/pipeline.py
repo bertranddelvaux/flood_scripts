@@ -43,9 +43,6 @@ def clean_buffer_impacts(
         list_countries: list[str] = LIST_COUNTRIES,
         n_days: int = N_DAYS,
         geoserver: bool = False,
-        username: str = None,
-        password: str = None,
-        server: str = None,
 ) -> None:
     """
     Remove past files which are not day 0, i.e. depth maps whose file name rdYYYYMMDD and feYYYYMMDD are different
@@ -108,9 +105,6 @@ def process_files_include_exclude(
         to_epsg_3857: bool = True,
         geoserver: bool = False,
         geo_client: GeoServerClient | None = None,
-        username: str = None,
-        password: str = None,
-        server: str = None,
 ) -> tuple[bool, bool, tuple, int]:
     """
     Process files in buffer folder
@@ -174,9 +168,6 @@ def process_pipeline(
         threshold: float = AGREEMENT_THRESHOLD,
         geoserver: bool = False,
         geo_client: GeoServerClient | None = None,
-        username: str = None,
-        password: str = None,
-        server: str = None,
         trigger_band_value: int = TRIGGER_BAND_VALUE,
 ) -> None:
     """
@@ -291,9 +282,6 @@ def process_pipeline(
                             to_epsg_3857=to_epsg_3857,
                             geo_client=geo_client,
                             geoserver=geoserver,
-                            username=username,
-                            password=password,
-                            server=server,
                         )
 
                         # above threshold
@@ -719,9 +707,6 @@ def process_pipeline(
         list_countries=LIST_COUNTRIES,
         n_days=n_days,
         geoserver=geoserver,
-        server=server,
-        username=username,
-        password=password,
     )
 
 def process_pipeline_historic(
@@ -734,9 +719,6 @@ def process_pipeline_historic(
         to_epsg_3857: bool = True,
         geoserver: bool = False,
         geo_client: GeoServerClient | None = None,
-        username: str = None,
-        password: str = None,
-        server: str = None,
         depth_band_trigger: int = 5
 ) -> None:
     """
@@ -843,9 +825,6 @@ def process_pipeline_historic(
             list_countries=[country],
             geoserver=geoserver,
             geo_client=geo_client,
-            username=username,
-            password=password,
-            server=server,
             trigger_band_value=depth_band_trigger
         )
 
@@ -929,9 +908,6 @@ if __name__ == "__main__":
             list_countries=args.list_countries,
             geoserver=args.geoserver,
             geo_client=geo_client,
-            username=username,
-            password=password,
-            server=server,
             trigger_band_value=args.depth_band_trigger
         )
     else:
@@ -954,9 +930,6 @@ if __name__ == "__main__":
             list_countries=args.list_countries,
             geoserver=args.geoserver,
             geo_client=geo_client,
-            username=username,
-            password=password,
-            server=server,
             depth_band_trigger=args.depth_band_trigger
         )
 
@@ -968,8 +941,5 @@ if __name__ == "__main__":
                 list_countries=args.list_countries,
                 geoserver=args.geoserver,
                 geo_client=geo_client,
-                username=username,
-                password=password,
-                server=server,
                 depth_band_trigger=args.depth_band_trigger
             )
