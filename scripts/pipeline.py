@@ -883,7 +883,7 @@ if __name__ == "__main__":
     parser.add_argument('-to_now', '--to_now', help='Run historic data to now', action='store_true', default=False)
     parser.add_argument('-g', '--geoserver', help='Update geoserver', action='store_true', default=False)
     parser.add_argument('-gv', '--geoserver_version', help='GeoServer API version (legacy or modern)',
-                        type=str, choices=['legacy', 'modern'], default='legacy')
+                        type=str, choices=['modern'], default='modern')
     parser.add_argument('-u', '--username', help='Geoserver username', type=str, default=None)
     parser.add_argument('-p', '--password', help='Geoserver password', type=str, default=None)
     parser.add_argument('-server', '--server', help='Geoserver server', type=str, default='http://localhost:8080/geoserver/')
@@ -898,27 +898,36 @@ if __name__ == "__main__":
     password = args.password
     server = args.server
 
-    if args.geoserver_version == 'legacy':
-        from geoserver.interface import uploadToGeoserver, deleteFromGeoserver
-    elif args.geoserver_version == 'modern':
-        from geoserver.interface_modern import GeoServerClient
-    else:
-        raise ValueError(
-            f"Geoserver version '{args.geoserver_version}' was not recognized. Expected 'legacy' or 'modern'.")
+    geo_client = None
+
+    if args.geoserver:
+        if args.geoserver_version == 'modern':
+
+            if args.username is None:
+                username = os.environ.get('GEOSERVER_USERNAME')
+                if username is None:
+                    raise Exception('Geoserver username not provided')
+            if args.password is None:
+                password = os.environ.get('GEOSERVER_PASSWORD')
+                if password is None:
+                    raise Exception('Geoserver password not provided')
+
+            from geoserver.interface_modern import GeoServerClient
+
+            # Initialize the client once
+            geo_client = GeoServerClient(
+                server_url=server,
+                username=username,
+                password=password,
+            )
+        else:
+            raise ValueError(
+                f"Geoserver version '{args.geoserver_version}' was not recognized. Expected 'modern'.")
 
     if args.missing_data is not None:
         generate_json_missing_data(json_file_path=args.missing_data)
         exit()
 
-    if args.geoserver:
-        if args.username is None:
-            username = os.environ.get('GEOSERVER_USERNAME')
-            if username is None:
-                raise Exception('Geoserver username not provided')
-        if args.password is None:
-            password = os.environ.get('GEOSERVER_PASSWORD')
-            if password is None:
-                raise Exception('Geoserver password not provided')
 
     if not args.historic:
         process_pipeline(
