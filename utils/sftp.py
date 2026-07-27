@@ -2,6 +2,7 @@ import os
 import pysftp
 import json
 import zipfile
+import pandas as pd
 from datetime import datetime, timedelta
 
 from interface.connection import HOSTNAME, USERNAME, PASSWORD, cnopts
@@ -66,10 +67,28 @@ def download_pipeline(
                         # Check for zip extension and ensure it's a file
                         if filename.lower().endswith(".zip") and os.path.isfile(filepath):
                             with zipfile.ZipFile(filepath, "r") as zip_ref:
+                                # Capture the names of the files before extracting them
+                                extracted_files = zip_ref.namelist()
                                 zip_ref.extractall(path)
 
                             # Clean up the zip archive so only extracted CSVs remain
                             os.remove(filepath)
+
+                            # Process the newly extracted files
+                            for extracted_name in extracted_files:
+                                if extracted_name.lower().endswith(".csv"):
+                                    csv_filepath = os.path.join(path, extracted_name)
+
+                                    # Read the CSV, treating the first column as the index.
+                                    # (If your index is just a standard column named 'index', remove index_col=0)
+                                    df = pd.read_csv(csv_filepath, index_col=0)
+
+                                    # Strip rows where the index is exactly 'total'
+                                    # (Use df.index.str.lower() != 'total' if you need case-insensitivity)
+                                    df = df[df.index != 'total']
+
+                                    # Save the cleaned CSV back to the same file
+                                    df.to_csv(csv_filepath)
 
                 elif sub_folder == RASTER_FOLDER:
                     buffer_path = os.path.join(DATA_FOLDER, country, sub_folder, BUFFER_FOLDER)
